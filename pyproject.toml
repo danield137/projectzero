@@ -1,0 +1,64 @@
+[project]
+name = "projectzero"
+version = "0.1.0"
+description = "Default template for PDM package"
+authors = [
+    {name = "Daniel Dror", email = "danield137@gmail.com"},
+]
+dependencies = [
+    "termcolor>=2.5.0",
+    "numpy>=2.2.4",
+    "psutil>=7.2.1",
+]
+requires-python = "==3.10.*"
+readme = "README.md"
+license = {text = """
+Copyright (c) [Daniel Dror;danield137@gmail.com]
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to use, copy, modify, and distribute the Software for non-commercial, non-profit purposes only.
+Commercial use, including but not limited to use by for-profit organizations or individuals for business purposes, is not permitted without obtaining a separate commercial license from the copyright holder.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY...
+"""}
+
+[tool.ruff]
+# Allow lines to be as long as 120.
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # pyupgrade
+    "UP",
+    # flake8-bugbear
+    "B",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+ignore = [
+    "B904", # Within an `except` clause, raise exceptions with `raise
+    "B905", # `zip()` without an explicit `strict=` parameter
+    "SIM102", # Use a single `if` statement instead of nested `if` statements
+    "E501", # line too long
+    "B024", # `Component` is an abstract base class, but it has no abstract methods or properties
+    "UP031", # "Use format specifiers instead of percent format
+]
+
+[dependency-groups]
+test = [
+    "pytest>=8.3.5",
+    "pyperf>=2.9.0",
+    "pytest-cov>=6.1.1",
+]
+lint = [
+    "ruff>=0.9.0",
+    "pylint>=3.3.3",
+]
+dev = [
+    "ruff>=0.14.10",
+    "ty>=0.0.14",
+]

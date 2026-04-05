@@ -1,0 +1,19 @@
+{
+	"servers": {
+		"Workflowy MCP": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"mcp-workflowy@latest",
+				"server",
+				"start"
+			],
+			"env": {
+				"WORKFLOWY_USERNAME": "",
+				"WORKFLOWY_PASSWORD": ""
+			},
+			"type": "stdio"
+		}
+	},
+	"inputs": []
+}

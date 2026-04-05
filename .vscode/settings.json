@@ -1,0 +1,19 @@
+{
+    "python.analysis.typeCheckingMode": "strict",
+    "cSpell.words": [
+        "cumsum",
+        "etype",
+        "ndarray",
+        "photosynth",
+        "regen",
+        "resettables"
+    ],
+    "python.testing.pytestArgs": [
+        "tests"
+    ],
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestEnabled": true,
+    "chat.tools.terminal.autoApprove": {
+        "uv": true
+    }
+}

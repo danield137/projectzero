@@ -1,0 +1,16 @@
+[FORMAT]
+max-line-length=160
+
+# In order:
+# C0116 = missing-function-docstring
+# C0115 = missing-class-docstring
+# C0114 = missing-module-docstring
+# R0903 = too-few-public-methods
+# R0902 = too-many-instance-attributes
+# W0603 = global-statement
+# E1120 = no-value-for-parameter
+# R0912 = too-many-branches
+# C0200 = consider-iterating-dictionary
+# C0103 = invalid-name
+[MESSAGES CONTROL]
+disable=C0116,C0115,C0114,R0903,R0902,W0603,E1120,R0912,C0200,C0103
