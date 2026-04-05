@@ -12,7 +12,7 @@ A lightweight ECS (Entity Component System) based simulation engine.
 ## Installation
 
 ```bash
-pip install sim
+pip install zero-sim
 ```
 
 ## Quick Start

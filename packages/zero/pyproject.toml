@@ -6,7 +6,7 @@ authors = [
     {name = "Daniel Dror", email = "danield137@gmail.com"},
 ]
 dependencies = [
-    "sim",
+    "zero-sim",
     "termcolor>=2.5.0",
     "psutil>=7.2.1",
 ]
@@ -20,7 +20,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY...
 """}
 
 [tool.uv.sources]
-sim = { workspace = true }
+zero-sim = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]
