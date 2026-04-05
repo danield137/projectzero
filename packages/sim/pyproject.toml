@@ -1,5 +1,5 @@
 [project]
-name = "zero-sim"
+name = "simz"
 version = "0.1.0"
 description = "A lightweight ECS-based simulation engine"
 authors = [
