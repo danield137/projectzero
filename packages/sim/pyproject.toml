@@ -1,5 +1,5 @@
 [project]
-name = "zero-sim"
+name = "sim"
 version = "0.1.0"
 description = "A lightweight ECS-based simulation engine"
 authors = [
@@ -9,7 +9,8 @@ dependencies = [
     "numpy>=2.2.4",
     "termcolor>=2.5.0",
 ]
-requires-python = "==3.10.*"
+requires-python = ">=3.10"
+readme = "README.md"
 license = {text = """
 Copyright (c) [Daniel Dror;danield137@gmail.com]
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to use, copy, modify, and distribute the Software for non-commercial, non-profit purposes only.
@@ -17,6 +18,15 @@ Commercial use, including but not limited to use by for-profit organizations or 
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY...
 """}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Games/Entertainment :: Simulation",
+]
+
+[project.urls]
+Repository = "https://github.com/danield137/projectzero"
 
 [build-system]
 requires = ["hatchling"]

@@ -2,7 +2,7 @@
 members = ["packages/*"]
 
 [tool.uv.sources]
-zero-sim = { workspace = true }
+sim = { workspace = true }
 
 [tool.ruff]
 line-length = 120
