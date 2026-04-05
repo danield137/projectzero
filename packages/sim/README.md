@@ -18,9 +18,9 @@ pip install simz
 ## Quick Start
 
 ```python
-from sim.ecs.core import ECS
-from sim.ecs.component import Component
-from sim.ecs.system import System
+from simz.ecs.core import ECS
+from simz.ecs.component import Component
+from simz.ecs.system import System
 
 # Define components
 class Position(Component):

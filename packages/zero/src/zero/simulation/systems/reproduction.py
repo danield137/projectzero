@@ -1,8 +1,8 @@
 import random
 
-from sim.common import logging
-from sim.ecs.core import ECS
-from sim.ecs.system import System
+from simz.common import logging
+from simz.ecs.core import ECS
+from simz.ecs.system import System
 from zero.simulation.components import (  # BirthdayComponent,
     ActivityComponent,
     EnergyComponent,

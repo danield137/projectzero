@@ -1,4 +1,4 @@
-from sim.ai.memory import MemoryData, PerfectMemory
+from simz.ai.memory import MemoryData, PerfectMemory
 from zero.ai.actions import MatingAction
 from zero.ai.context import PrimitiveBrainContext
 from zero.ai.primitive import (

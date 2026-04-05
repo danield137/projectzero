@@ -1,6 +1,6 @@
 import random
 
-from sim.ecs.system import System
+from simz.ecs.system import System
 from zero.simulation.components import (
     EntitiesConfigComponent,
     StatsComponent,

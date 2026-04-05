@@ -1,11 +1,11 @@
 import enum
 from typing import cast
 
-from sim.ai import ActionStep
-from sim.ai.brain import GoalSelector, Planner
-from sim.ai.context import BrainContext
-from sim.ai.memory import MemoryFact, MemQuery
-from sim.common.logging import get_logger
+from simz.ai import ActionStep
+from simz.ai.brain import GoalSelector, Planner
+from simz.ai.context import BrainContext
+from simz.ai.memory import MemoryFact, MemQuery
+from simz.common.logging import get_logger
 from zero.ai.actions import (
     EatAction,
     ExploreAction,

@@ -4,8 +4,8 @@ import enum
 from dataclasses import dataclass
 from typing import Protocol
 
-from sim.ai.context import BrainContext
-from sim.common.enum import TriStateEnum
+from simz.ai.context import BrainContext
+from simz.common.enum import TriStateEnum
 
 
 class RuleResult(enum.Enum):

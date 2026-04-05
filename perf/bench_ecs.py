@@ -23,8 +23,8 @@ import random
 import time
 from dataclasses import dataclass, field
 
-from sim.ecs.component import ClassComponent, ClampedFloatComponent
-from sim.ecs.core import ECS
+from simz.ecs.component import ClassComponent, ClampedFloatComponent
+from simz.ecs.core import ECS
 
 
 # ── Dummy components ────────────────────────────────────────────────

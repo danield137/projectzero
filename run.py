@@ -1,7 +1,7 @@
 import argparse
 
 from zero import Simulation
-from sim.config import RunConfiguration
+from simz.config import RunConfiguration
 
 
 def main():

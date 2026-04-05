@@ -10,12 +10,12 @@ from typing import Any, cast
 
 from termcolor import colored
 
-from sim.common import logging
-from sim.common.ds.generational import GenerationalDict
-from sim.common.formatting import human_readable_bytes, human_readable_time_measurement
-from sim.config import RunConfiguration, set_global_config
-from sim.ecs.core import ECS
-from sim.ecs.system import System
+from simz.common import logging
+from simz.common.ds.generational import GenerationalDict
+from simz.common.formatting import human_readable_bytes, human_readable_time_measurement
+from simz.config import RunConfiguration, set_global_config
+from simz.ecs.core import ECS
+from simz.ecs.system import System
 from zero.simulation.components import (
     GrowthComponent,
     LocalTimeComponent,

@@ -1,7 +1,7 @@
 import abc
 
-from sim.config import RunConfiguration, get_global_config
-from sim.ecs.core import ECS
+from simz.config import RunConfiguration, get_global_config
+from simz.ecs.core import ECS
 
 
 class System(abc.ABC):

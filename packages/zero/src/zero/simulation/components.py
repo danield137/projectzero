@@ -12,8 +12,8 @@ from typing import (
     runtime_checkable,
 )
 
-from sim.ai.memory import MemoryData
-from sim.ecs.component import (
+from simz.ai.memory import MemoryData
+from simz.ecs.component import (
     BoolComponent,
     ClassComponent,
     IntComponent,

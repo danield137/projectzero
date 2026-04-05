@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from sim.ai.memory import Memory, MemoryData
+from simz.ai.memory import Memory, MemoryData
 
 
 @dataclass(slots=True, frozen=True)

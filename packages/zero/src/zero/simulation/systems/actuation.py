@@ -1,7 +1,7 @@
 from typing import cast, get_args
 
-from sim.ai import ActionStep
-from sim.ecs.system import System
+from simz.ai import ActionStep
+from simz.ecs.system import System
 from zero.ai.actions import (
     ActionSteps,
     EatAction,

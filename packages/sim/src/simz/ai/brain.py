@@ -3,9 +3,9 @@ import enum
 from dataclasses import dataclass
 from typing import Generic, TypeVar
 
-from sim.ai import ActionStep
-from sim.ai.context import BrainContext
-from sim.ai.memory import Memory
+from simz.ai import ActionStep
+from simz.ai.context import BrainContext
+from simz.ai.memory import Memory
 
 TGoal = TypeVar("TGoal", bound=enum.Enum)
 

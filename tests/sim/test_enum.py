@@ -1,4 +1,4 @@
-from sim.common.enum import MonotonicEnum
+from simz.common.enum import MonotonicEnum
 
 
 # Create a test enum class that inherits from MonotonicEnum

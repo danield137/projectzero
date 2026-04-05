@@ -1,5 +1,5 @@
 from zero.ai.actions import EatAction, MatingAction, SleepAction
-from sim.ecs.core import ECS
+from simz.ecs.core import ECS
 from zero.simulation.components import (
     ActivityComponent,
     BrainComponent,

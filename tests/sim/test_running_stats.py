@@ -1,4 +1,4 @@
-from sim.common.ds.running_stats import RunningDistribution, RunningMean
+from simz.common.ds.running_stats import RunningDistribution, RunningMean
 
 
 def test_running_mean():

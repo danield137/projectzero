@@ -1,5 +1,5 @@
-from sim.ai.brain import Brain
-from sim.ai.memory import Memory, PerfectMemory
+from simz.ai.brain import Brain
+from simz.ai.memory import Memory, PerfectMemory
 from zero.ai.primitive import (
     PrimitiveGoal,
     PrimitiveGoalSelector,

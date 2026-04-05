@@ -1,7 +1,7 @@
 from typing import List
 
-from sim.ecs.component import Component, IntComponent
-from sim.ecs.core import ECS
+from simz.ecs.component import Component, IntComponent
+from simz.ecs.core import ECS
 
 
 class NameComponent(Component):

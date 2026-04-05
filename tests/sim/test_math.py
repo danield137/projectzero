@@ -1,6 +1,6 @@
 import numpy as np
 
-from sim.common.math import (
+from simz.common.math import (
     RandomChoiceMode,
     clamp,
     cosine,

@@ -1,4 +1,4 @@
-from sim.ecs.system import System
+from simz.ecs.system import System
 
 from .actuation import ActuationSystem
 from .energy import EnergySystem

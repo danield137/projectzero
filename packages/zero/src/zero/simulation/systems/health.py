@@ -5,10 +5,10 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import cast
 
-from sim.common import logging
-from sim.common.math import sigmoid_probability
-from sim.ecs.core import ECS
-from sim.ecs.system import System
+from simz.common import logging
+from simz.common.math import sigmoid_probability
+from simz.ecs.core import ECS
+from simz.ecs.system import System
 from zero.simulation.components import (
     CauseOfDeath,
     EntitiesConfigComponent,

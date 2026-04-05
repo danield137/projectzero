@@ -7,7 +7,7 @@ from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
 from typing import Any
 
-from sim.common.math import Vector, cosine
+from simz.common.math import Vector, cosine
 
 
 @dataclass(slots=True)

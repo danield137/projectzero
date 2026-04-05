@@ -1,7 +1,7 @@
 from typing import Any, Dict, cast
 
 from zero.ai.primitive import PrimitiveGoal
-from sim.ecs.core import ECS
+from simz.ecs.core import ECS
 from zero.simulation.components import (
     BrainComponent,
     DietComponent,

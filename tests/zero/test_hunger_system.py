@@ -1,6 +1,6 @@
 import math
 
-from sim.ecs.core import ECS
+from simz.ecs.core import ECS
 from zero.simulation.components import (
     ActivityComponent,
     CauseOfDeath,

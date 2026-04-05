@@ -6,7 +6,7 @@ from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass, field
 
-from sim.common.math import MovingAverageFunction, moving_average
+from simz.common.math import MovingAverageFunction, moving_average
 
 
 @dataclass(slots=True)

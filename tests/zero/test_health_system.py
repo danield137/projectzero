@@ -1,8 +1,8 @@
 import math
 from typing import Sequence, cast
 
-from sim.ecs.component import Component
-from sim.ecs.core import ECS
+from simz.ecs.component import Component
+from simz.ecs.core import ECS
 from zero.simulation.components import (
     EntitiesConfigComponent,
     FamilyComponent,
