@@ -72,7 +72,6 @@ class ZeroToTenFloatComponent(ClampedFloatComponent):
 
     def __init__(self, value: float):
         # Clamp the initial value
-        print(f"min: {self.min}, max: {self.max}")
         clamped_value = max(0.0, min(value, 10.0 - EPSILON))
         super().__init__(value=clamped_value, min=0.0, max=10.0 - EPSILON)
 

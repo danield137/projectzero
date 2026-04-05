@@ -16,13 +16,11 @@ from simz.common.ds.generational import (
     GenerationalDict,
     IsolationLevel,
 )
-from simz.common.extensions import debug_enabled, equals
+from simz.common.extensions import equals
 from simz.common.logging import Verbosity, get_logger
 from simz.ecs.component import Component
 
 logger = get_logger()
-
-is_debugger_attached = debug_enabled()
 
 
 T = TypeVar("T")
@@ -143,8 +141,6 @@ class ECS:
 
         :param eid: the entity id
         """
-        if self.track_entity(eid):
-            breakpoint()
         etype = self.entities_by_id[eid]
         if self.verbosity == Verbosity.DEBUG:
             logger.debug(
@@ -211,16 +207,13 @@ class ECS:
             raise ValueError(f"Entity {eid} is immutable, can't update component {comp_name}")
 
         if self.track_entity(eid):
-            if is_debugger_attached:
-                breakpoint()
-            else:
-                logger.warning(
-                    "%s entity %s %s: %s",
-                    colored("Update", "light_yellow"),
-                    colored(eid, "light_cyan"),
-                    colored(comp_name, "green"),
-                    comp_data,
-                )
+            logger.warning(
+                "%s entity %s %s: %s",
+                colored("Update", "light_yellow"),
+                colored(eid, "light_cyan"),
+                colored(comp_name, "green"),
+                comp_data,
+            )
         prev = self.components_by_entity[eid].get(comp_name)
         if equals(prev, comp_data):
             return
