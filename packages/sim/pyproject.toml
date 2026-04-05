@@ -1,6 +1,6 @@
 [project]
 name = "simz"
-version = "0.2.0"
+version = "0.2.1"
 description = "A lightweight ECS-based simulation engine"
 authors = [
     {name = "Daniel Dror", email = "danield137@gmail.com"},

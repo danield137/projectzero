@@ -1,4 +1,4 @@
-# sim
+# simz
 
 A lightweight ECS (Entity Component System) based simulation engine.
 
