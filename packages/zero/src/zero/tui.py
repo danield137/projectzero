@@ -303,7 +303,7 @@ class TUIDisplay:
             self._draw_perf_compact(2, right_col, right_width)
 
             # Right side: Weather (below perf)
-            self._draw_weather_compact(8, right_col, right_width)
+            self._draw_weather_compact(9, right_col, right_width)
 
             # Left side: Population
             row = 2
@@ -345,27 +345,40 @@ class TUIDisplay:
         with contextlib.suppress(curses.error):
             self.stdscr.addstr(row, col, text[: max_x - col], attr)
 
+    def _draw_section_header(self, row: int, col: int, title: str, width: int = 0):
+        """Draw a section header with a horizontal rule."""
+        if not self.stdscr:
+            return
+        max_y, max_x = self.stdscr.getmaxyx()
+        if row >= max_y:
+            return
+        if width == 0:
+            width = max_x - col - 1
+        rule_len = max(0, width - len(title) - 3)
+        with contextlib.suppress(curses.error):
+            self.stdscr.addstr(row, col, f"── {title} ", curses.A_BOLD | curses.color_pair(4))
+            self.stdscr.addstr("─" * rule_len, curses.A_DIM | curses.color_pair(4))
+
     def _draw_perf_compact(self, row: int, col: int, width: int):
         """Draw compact performance metrics in top-right."""
         if not self.stdscr:
             return
         max_y, _ = self.stdscr.getmaxyx()
 
-        with contextlib.suppress(curses.error):
-            self.stdscr.addstr(row, col, "Perf", curses.A_BOLD | curses.color_pair(4))
+        self._draw_section_header(row, col, "Perf", width)
 
         row += 1
         if row < max_y:
             total_ms = self.perf_stats.total_time_ms
             tps = 1000 / total_ms if total_ms > 0 else 0
             with contextlib.suppress(curses.error):
-                self.stdscr.addstr(row, col, f"{total_ms:.2f}ms/tick  {tps:.0f} tps", curses.A_DIM)
+                self.stdscr.addstr(row, col + 2, f"{'Tick:':<8} {total_ms:.2f}ms  ({tps:.0f} tps)", curses.A_DIM)
 
         row += 1
         if row < max_y:
             with contextlib.suppress(curses.error):
                 self.stdscr.addstr(
-                    row, col, f"RSS {self.perf_stats.rss_mb:.1f}M  Heap {self.perf_stats.heap_mb:.1f}M", curses.A_DIM
+                    row, col + 2, f"{'Mem:':<8} RSS {self.perf_stats.rss_mb:.1f}M  Heap {self.perf_stats.heap_mb:.1f}M", curses.A_DIM
                 )
 
         row += 1
@@ -373,16 +386,16 @@ class TUIDisplay:
             frag_pct = self.perf_stats.ecs_fragmentation * 100
             with contextlib.suppress(curses.error):
                 self.stdscr.addstr(
-                    row, col, f"ECS {self.perf_stats.ecs_used:,}  Frag {frag_pct:.0f}%", curses.A_DIM
+                    row, col + 2, f"{'ECS:':<8} {self.perf_stats.ecs_used:,} slots  {frag_pct:.0f}% frag", curses.A_DIM
                 )
 
         row += 1
         if row < max_y and self._refresh_interval_ms > 0:
             with contextlib.suppress(curses.error):
                 if self._refresh_interval_ms >= 1000:
-                    self.stdscr.addstr(row, col, f"Refresh {self._refresh_interval_ms / 1000:.1f}s", curses.A_DIM)
+                    self.stdscr.addstr(row, col + 2, f"{'Refresh:':<8} {self._refresh_interval_ms / 1000:.1f}s", curses.A_DIM)
                 else:
-                    self.stdscr.addstr(row, col, f"Refresh {self._refresh_interval_ms:.0f}ms", curses.A_DIM)
+                    self.stdscr.addstr(row, col + 2, f"{'Refresh:':<8} {self._refresh_interval_ms:.0f}ms", curses.A_DIM)
 
     def _draw_weather_compact(self, row: int, col: int, width: int):
         """Draw compact weather widget on the right side."""
@@ -390,14 +403,17 @@ class TUIDisplay:
             return
         max_y, _ = self.stdscr.getmaxyx()
 
-        with contextlib.suppress(curses.error):
-            self.stdscr.addstr(row, col, "Weather", curses.A_BOLD | curses.color_pair(4))
+        self._draw_section_header(row, col, "Weather", width)
 
         row += 1
         if row < max_y:
             sun_pct = self.world_stats.sunny_ratio * 100
             with contextlib.suppress(curses.error):
-                self.stdscr.addstr(row, col, f"Sun {sun_pct:.0f}%  Rain {self.world_stats.avg_precipitation:.1f}")
+                self.stdscr.addstr(row, col + 2, f"{'Sun:':<8} {sun_pct:.0f}%")
+        row += 1
+        if row < max_y:
+            with contextlib.suppress(curses.error):
+                self.stdscr.addstr(row, col + 2, f"{'Rain:':<8} {self.world_stats.avg_precipitation:.1f}")
 
     def _draw_population_section(self, start_row: int, col: int, width: int) -> int:
         """Draw population stats in the main area."""
@@ -406,11 +422,16 @@ class TUIDisplay:
         max_y, _ = self.stdscr.getmaxyx()
 
         row = start_row
-        with contextlib.suppress(curses.error):
-            self.stdscr.addstr(row, col, "Population", curses.A_BOLD | curses.color_pair(4))
+        self._draw_section_header(row, col, "Population", width)
         row += 1
 
         ws = self.world_stats
+
+        # Column headers
+        if row < max_y:
+            with contextlib.suppress(curses.error):
+                self.stdscr.addstr(row, col + 2, f"{'':10} {'Count':>6}  {'Net':>5}  {'Born':>5}  {'Died':>5}", curses.A_DIM)
+        row += 1
 
         # Animals
         if row < max_y:
@@ -418,9 +439,9 @@ class TUIDisplay:
                 diff = ws.animal_births - ws.animal_deaths
                 diff_str = f"+{diff}" if diff >= 0 else str(diff)
                 diff_color = curses.color_pair(1) if diff > 0 else (curses.color_pair(2) if diff < 0 else 0)
-                self.stdscr.addstr(row, col + 2, f"Animals:  {ws.animals:>4}  (")
-                self.stdscr.addstr(f"{diff_str}", diff_color)
-                self.stdscr.addstr(f")  +{ws.animal_births} / -{ws.animal_deaths}")
+                self.stdscr.addstr(row, col + 2, f"{'Animal':10} {ws.animals:>6}  ")
+                self.stdscr.addstr(f"{diff_str:>5}", diff_color)
+                self.stdscr.addstr(f"  {ws.animal_births:>5}  {ws.animal_deaths:>5}")
             except curses.error:
                 pass
         row += 1
@@ -431,9 +452,9 @@ class TUIDisplay:
                 diff = ws.human_births - ws.human_deaths
                 diff_str = f"+{diff}" if diff >= 0 else str(diff)
                 diff_color = curses.color_pair(1) if diff > 0 else (curses.color_pair(2) if diff < 0 else 0)
-                self.stdscr.addstr(row, col + 2, f"Humans:   {ws.humans:>4}  (")
-                self.stdscr.addstr(f"{diff_str}", diff_color)
-                self.stdscr.addstr(f")  +{ws.human_births} / -{ws.human_deaths}")
+                self.stdscr.addstr(row, col + 2, f"{'Human':10} {ws.humans:>6}  ")
+                self.stdscr.addstr(f"{diff_str:>5}", diff_color)
+                self.stdscr.addstr(f"  {ws.human_births:>5}  {ws.human_deaths:>5}")
             except curses.error:
                 pass
         row += 1
@@ -444,9 +465,9 @@ class TUIDisplay:
                 diff = ws.plants_generated - ws.plants_consumed
                 diff_str = f"+{diff:.0f}" if diff >= 0 else f"{diff:.0f}"
                 diff_color = curses.color_pair(1) if diff > 0 else (curses.color_pair(2) if diff < 0 else 0)
-                self.stdscr.addstr(row, col + 2, f"Plants:  {ws.plant_biomass:>5.0f}  (")
-                self.stdscr.addstr(f"{diff_str}", diff_color)
-                self.stdscr.addstr(f")  +{ws.plants_generated:.0f} / -{ws.plants_consumed:.0f}")
+                self.stdscr.addstr(row, col + 2, f"{'Plant':10} {ws.plant_biomass:>6.0f}  ")
+                self.stdscr.addstr(f"{diff_str:>5}", diff_color)
+                self.stdscr.addstr(f"  {ws.plants_generated:>5.0f}  {ws.plants_consumed:>5.0f}")
             except curses.error:
                 pass
         row += 1
@@ -461,8 +482,7 @@ class TUIDisplay:
         ws = self.world_stats
 
         row = start_row
-        with contextlib.suppress(curses.error):
-            self.stdscr.addstr(row, col, "Vitals (Avg)", curses.A_BOLD | curses.color_pair(4))
+        self._draw_section_header(row, col, "Vitals (Avg)", width)
         row += 1
 
         # Header
@@ -492,8 +512,7 @@ class TUIDisplay:
         max_y, _ = self.stdscr.getmaxyx()
 
         row = start_row
-        with contextlib.suppress(curses.error):
-            self.stdscr.addstr(row, 2, "Activity", curses.A_BOLD | curses.color_pair(4))
+        self._draw_section_header(row, 2, "Activity")
         row += 1
 
         for species, goals in self.world_stats.goals.items():
