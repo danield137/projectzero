@@ -180,7 +180,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "psutil", specifier = ">=7.2.1" },
-    { name = "simz", editable = "packages/sim" },
+    { name = "simz", editable = "packages/simz" },
     { name = "termcolor", specifier = ">=2.5.0" },
 ]
 
@@ -301,7 +301,7 @@ wheels = [
 [[package]]
 name = "simz"
 version = "0.2.1"
-source = { editable = "packages/sim" }
+source = { editable = "packages/simz" }
 dependencies = [
     { name = "numpy" },
     { name = "termcolor" },

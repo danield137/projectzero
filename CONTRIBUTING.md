@@ -14,7 +14,7 @@ uv sync --all-groups
 
 This is a **uv workspace** monorepo with two packages:
 
-- **`packages/sim/`** (`simz`) — standalone ECS simulation engine
+- **`packages/simz/`** (`simz`) — standalone ECS simulation engine
 - **`packages/zero/`** (`projectzero`) — the life simulation built on simz
 
 The dependency is one-way: `zero → simz`. The engine has no knowledge of the simulation.
