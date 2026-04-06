@@ -462,7 +462,7 @@ class TUIDisplay:
 
         row = start_row
         with contextlib.suppress(curses.error):
-            self.stdscr.addstr(row, col, "Vitals", curses.A_BOLD | curses.color_pair(4))
+            self.stdscr.addstr(row, col, "Vitals (Avg)", curses.A_BOLD | curses.color_pair(4))
         row += 1
 
         # Header
