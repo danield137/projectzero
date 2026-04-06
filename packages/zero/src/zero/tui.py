@@ -95,6 +95,8 @@ class TUIDisplay:
         self._prev_plants_consumed_sum = 0.0
         self._last_render_time: float = 0.0
         self._refresh_interval_ms: float = 0.0
+        self._ticks_since_refresh: int = 0
+        self._prev_render_tick: int = 0
 
     def start(self):
         """Initialize curses and set up the screen."""
@@ -277,6 +279,8 @@ class TUIDisplay:
             return
 
         self.last_render_tick = tick
+        self._ticks_since_refresh = tick - self._prev_render_tick if self._prev_render_tick > 0 else self.update_interval
+        self._prev_render_tick = tick
         now = time.time()
         if self._last_render_time > 0:
             self._refresh_interval_ms = (now - self._last_render_time) * 1000
@@ -545,6 +549,14 @@ class TUIDisplay:
 
         return row
 
+    def _fmt_time(self, ms: float) -> str:
+        """Format a time value compactly."""
+        if ms >= 1000:
+            return f"{ms / 1000:.1f}s"
+        if ms >= 1.0:
+            return f"{ms:.1f}ms"
+        return f"{ms * 1000:.0f}µs"
+
     def _draw_systems_section(self, start_row: int, col: int, width: int) -> int:
         """Draw per-system time breakdown on the right side."""
         if not self.stdscr or not self.perf_stats.system_times:
@@ -559,19 +571,25 @@ class TUIDisplay:
         if total_ms == 0:
             return row
 
+        ticks = max(self._ticks_since_refresh, 1)
+
+        # Column header
+        if row < max_y:
+            self._safe_addstr(row, col + 2, f"{'':9} {'tick':>6} {'%':>4} {'total':>6}", curses.A_DIM)
+        row += 1
+
         sorted_systems = sorted(self.perf_stats.system_times.items(), key=lambda x: x[1], reverse=True)
         for name, ms in sorted_systems:
             if row >= max_y - 1:
                 break
-            short_name = name.replace("System", "")
+            short_name = name.replace("System", "")[:9]
             pct = (ms / total_ms) * 100 if total_ms > 0 else 0
+            total_time = ms * ticks
 
-            if ms >= 1.0:
-                time_str = f"{ms:.1f}ms"
-            else:
-                time_str = f"{ms * 1000:.0f}µs"
+            tick_str = self._fmt_time(ms)
+            total_str = self._fmt_time(total_time)
 
-            self._safe_addstr(row, col + 2, f"{short_name:<12} {time_str:>7} {pct:>3.0f}%", curses.A_DIM)
+            self._safe_addstr(row, col + 2, f"{short_name:<9} {tick_str:>6} {pct:>3.0f}% {total_str:>6}", curses.A_DIM)
             row += 1
 
         return row
