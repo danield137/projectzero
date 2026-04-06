@@ -35,4 +35,4 @@ ecs.create_entity("player", [Position(0, 0)])
 
 ## License
 
-Non-commercial use only. See [LICENSE](LICENSE) for details.
+[MIT](../../LICENSE) — see root LICENSE file.
