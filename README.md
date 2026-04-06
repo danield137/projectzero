@@ -1,10 +1,10 @@
 # Project Zero
 
-A simulation sandbox exploring emergent AI behavior, social dynamics, and ecological systems — built on an ECS (Entity Component System) architecture in Python.
+A learning project exploring game design, simulation architecture, and AI in games — built on an ECS (Entity Component System) architecture in Python.
 
 ## Overview
 
-Project Zero simulates a miniature world where plants grow, animals hunt, and humans reason — all driven by composable systems and lightweight AI. It's a playground for prototyping ideas around agent behavior, resource economies, and emergent complexity.
+Project Zero simulates a miniature world where plants grow, animals hunt, and humans reason — all driven by composable systems and lightweight AI. It's an educational sandbox for learning how simulations, ECS engines, and game AI work by building them from scratch.
 
 **Key features:**
 - **ECS engine ([simz](https://pypi.org/project/simz/))** — generational entity IDs, typed components, system-based updates
@@ -85,6 +85,10 @@ python run.py [options]
   --tui-interval N      Dashboard refresh interval in ticks (default: 100)
   --tui-delay SECS      Delay between ticks (default: 0)
 ```
+
+## Roadmap
+
+See [ROADMAP.md](ROADMAP.md) for the full plan — from current milestone (0.35: Simulation Stability) through grid-based worlds, pygame visualization, trading, migrations, and advanced AI.
 
 ## License
 

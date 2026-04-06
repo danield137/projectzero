@@ -76,7 +76,7 @@ For every user turn, execute this cycle unless a Memory Action is triggered:
 
 # 3. Project Context: Project Zero
 
-* **Goal**: Simulation sandbox for AI/Social interactions. Precursor to "Project Proxima".
+* **Goal**: Educational simulation sandbox for learning game design, ECS architecture, and AI in games.
 * **Tech Stack**: Python 3.10, Pytest, Black (120 chars).
 * **Key Areas**:
     * **ECS Core**: Foundational architecture.
