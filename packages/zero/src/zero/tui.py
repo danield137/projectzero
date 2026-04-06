@@ -318,6 +318,10 @@ class TUIDisplay:
             row += 1
             row = self._draw_goals_section(row, max_x)
 
+            # Full width: System time breakdown
+            row += 1
+            row = self._draw_systems_section(row, max_x)
+
             # Footer
             if max_y - 1 > 0:
                 self._draw_centered(max_y - 1, " [q] quit ", curses.A_DIM)
@@ -542,6 +546,45 @@ class TUIDisplay:
                     except curses.error:
                         pass
                     row += 1
+
+        return row
+
+    def _draw_systems_section(self, start_row: int, max_x: int) -> int:
+        """Draw per-system time breakdown."""
+        if not self.stdscr or not self.perf_stats.system_times:
+            return start_row
+        max_y, _ = self.stdscr.getmaxyx()
+
+        row = start_row
+        self._draw_section_header(row, 2, "Systems")
+        row += 1
+
+        total_ms = sum(self.perf_stats.system_times.values())
+        if total_ms == 0:
+            return row
+
+        # Header
+        if row < max_y:
+            self._safe_addstr(row, 4, f"{'System':<16} {'Time':>10}  {'%':>5}  {'':20}", curses.A_DIM)
+        row += 1
+
+        sorted_systems = sorted(self.perf_stats.system_times.items(), key=lambda x: x[1], reverse=True)
+        for name, ms in sorted_systems:
+            if row >= max_y - 1:
+                break
+            short_name = name.replace("System", "")
+            pct = (ms / total_ms) * 100 if total_ms > 0 else 0
+            bar_width = int(pct / 5)  # 20 chars = 100%
+            bar = "█" * bar_width + "░" * (20 - bar_width)
+
+            if ms >= 1.0:
+                time_str = f"{ms:.2f}ms"
+            else:
+                time_str = f"{ms * 1000:.0f}µs"
+
+            with contextlib.suppress(curses.error):
+                self.stdscr.addstr(row, 4, f"{short_name:<16} {time_str:>10}  {pct:>4.0f}%  [{bar}]")
+            row += 1
 
         return row
 
