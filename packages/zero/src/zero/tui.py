@@ -14,8 +14,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from zero.simulation.components import StatsComponent, SummarizedStatsComponent
-from zero.simulation.functional import stat_ops
+from zero.simulation.components import SummarizedStatsComponent
 
 if TYPE_CHECKING:
     from zero import Simulation
@@ -166,7 +165,6 @@ class TUIDisplay:
     def update_world_stats(self):
         """Update world statistics from the simulation."""
         try:
-            unified_stats = self.sim.ecs.get_singleton_component(StatsComponent)
             summarized_stats = self.sim.ecs.get_singleton_component(SummarizedStatsComponent)
 
             # Count living entities directly from ECS (population in StatsComponent gets reset)
@@ -229,11 +227,23 @@ class TUIDisplay:
                 float(np.mean(summarized_stats.precipitation)) if summarized_stats.precipitation else 0
             )
 
-            # Entity averages
-            self.world_stats.avg_animal_hunger = stat_ops.avg_hunger(unified_stats, "Animal")
-            self.world_stats.avg_human_hunger = stat_ops.avg_hunger(unified_stats, "Human")
-            self.world_stats.avg_animal_energy = stat_ops.avg_energy(unified_stats, "Animal")
-            self.world_stats.avg_human_energy = stat_ops.avg_energy(unified_stats, "Human")
+            # Entity averages — read directly from ECS components (StatsComponent gets reset each tick)
+            from zero.simulation.components import EnergyComponent, HungerComponent
+
+            animal_hunger_sum, animal_energy_sum = 0.0, 0.0
+            for eid in self.sim.ecs.entities_by_type.get(EntityTypes.ANIMAL, []):
+                animal_hunger_sum += self.sim.ecs.get_typed_component(eid, HungerComponent).value
+                animal_energy_sum += self.sim.ecs.get_typed_component(eid, EnergyComponent).value
+
+            human_hunger_sum, human_energy_sum = 0.0, 0.0
+            for eid in self.sim.ecs.entities_by_type.get(EntityTypes.HUMAN, []):
+                human_hunger_sum += self.sim.ecs.get_typed_component(eid, HungerComponent).value
+                human_energy_sum += self.sim.ecs.get_typed_component(eid, EnergyComponent).value
+
+            self.world_stats.avg_animal_hunger = animal_hunger_sum / animal_count if animal_count else 0.0
+            self.world_stats.avg_human_hunger = human_hunger_sum / human_count if human_count else 0.0
+            self.world_stats.avg_animal_energy = animal_energy_sum / animal_count if animal_count else 0.0
+            self.world_stats.avg_human_energy = human_energy_sum / human_count if human_count else 0.0
 
             # Goals distribution
             self.world_stats.goals = {}
