@@ -289,8 +289,9 @@ class TUIDisplay:
 
             # Layout columns
             left_col = 2
-            right_col = max(max_x - 30, max_x // 2 + 5)
+            right_col = max(max_x - 36, max_x // 2 + 2)
             right_width = max_x - right_col - 1
+            left_width = right_col - left_col - 2
 
             # Title bar
             title = "Project Zero"
@@ -307,11 +308,11 @@ class TUIDisplay:
 
             # Left side: Population
             row = 2
-            row = self._draw_population_section(row, left_col, right_col - 3)
+            row = self._draw_population_section(row, left_col, left_width)
 
             # Left side: Vitals
             row += 1
-            row = self._draw_vitals_section(row, left_col, right_col - 3)
+            row = self._draw_vitals_section(row, left_col, left_width)
 
             # Full width: Activity distribution
             row += 1
@@ -333,6 +334,20 @@ class TUIDisplay:
 
         except curses.error:
             pass
+
+    def _safe_addstr(self, row: int, col: int, text: str, attr: int = 0, max_col: int = 0):
+        """Write text clipped to max_col (or screen width) to prevent overflow."""
+        if not self.stdscr:
+            return
+        max_y, max_x = self.stdscr.getmaxyx()
+        if row >= max_y or col >= max_x:
+            return
+        limit = min(max_x, max_col) if max_col > 0 else max_x
+        avail = limit - col
+        if avail <= 0:
+            return
+        with contextlib.suppress(curses.error):
+            self.stdscr.addstr(row, col, text[:avail], attr)
 
     def _draw_centered(self, row: int, text: str, attr: int = 0):
         """Draw text centered on the screen."""
@@ -420,6 +435,7 @@ class TUIDisplay:
         if not self.stdscr:
             return start_row
         max_y, _ = self.stdscr.getmaxyx()
+        max_col = col + width
 
         row = start_row
         self._draw_section_header(row, col, "Population", width)
@@ -429,47 +445,37 @@ class TUIDisplay:
 
         # Column headers
         if row < max_y:
-            with contextlib.suppress(curses.error):
-                self.stdscr.addstr(row, col + 2, f"{'':10} {'Count':>6}  {'Net':>5}  {'Born':>5}  {'Died':>5}", curses.A_DIM)
+            self._safe_addstr(row, col + 2, f"{'':10} {'Count':>6}  {'Net':>5}  {'Born':>5}  {'Died':>5}", curses.A_DIM, max_col)
         row += 1
 
-        # Animals
-        if row < max_y:
-            try:
-                diff = ws.animal_births - ws.animal_deaths
-                diff_str = f"+{diff}" if diff >= 0 else str(diff)
-                diff_color = curses.color_pair(1) if diff > 0 else (curses.color_pair(2) if diff < 0 else 0)
-                self.stdscr.addstr(row, col + 2, f"{'Animal':10} {ws.animals:>6}  ")
-                self.stdscr.addstr(f"{diff_str:>5}", diff_color)
-                self.stdscr.addstr(f"  {ws.animal_births:>5}  {ws.animal_deaths:>5}")
-            except curses.error:
-                pass
-        row += 1
-
-        # Humans
-        if row < max_y:
-            try:
-                diff = ws.human_births - ws.human_deaths
-                diff_str = f"+{diff}" if diff >= 0 else str(diff)
-                diff_color = curses.color_pair(1) if diff > 0 else (curses.color_pair(2) if diff < 0 else 0)
-                self.stdscr.addstr(row, col + 2, f"{'Human':10} {ws.humans:>6}  ")
-                self.stdscr.addstr(f"{diff_str:>5}", diff_color)
-                self.stdscr.addstr(f"  {ws.human_births:>5}  {ws.human_deaths:>5}")
-            except curses.error:
-                pass
-        row += 1
+        for label, count, births, deaths in [
+            ("Animal", ws.animals, ws.animal_births, ws.animal_deaths),
+            ("Human", ws.humans, ws.human_births, ws.human_deaths),
+        ]:
+            if row >= max_y:
+                break
+            diff = births - deaths
+            diff_str = f"+{diff}" if diff >= 0 else str(diff)
+            diff_color = curses.color_pair(1) if diff > 0 else (curses.color_pair(2) if diff < 0 else 0)
+            line = f"{label:10} {count:>6}  {diff_str:>5}  {births:>5}  {deaths:>5}"
+            # Render with color on the Net column
+            prefix = f"{label:10} {count:>6}  "
+            self._safe_addstr(row, col + 2, prefix, 0, max_col)
+            self._safe_addstr(row, col + 2 + len(prefix), f"{diff_str:>5}", diff_color, max_col)
+            suffix = f"  {births:>5}  {deaths:>5}"
+            self._safe_addstr(row, col + 2 + len(prefix) + 5, suffix, 0, max_col)
+            row += 1
 
         # Plants
         if row < max_y:
-            try:
-                diff = ws.plants_generated - ws.plants_consumed
-                diff_str = f"+{diff:.0f}" if diff >= 0 else f"{diff:.0f}"
-                diff_color = curses.color_pair(1) if diff > 0 else (curses.color_pair(2) if diff < 0 else 0)
-                self.stdscr.addstr(row, col + 2, f"{'Plant':10} {ws.plant_biomass:>6.0f}  ")
-                self.stdscr.addstr(f"{diff_str:>5}", diff_color)
-                self.stdscr.addstr(f"  {ws.plants_generated:>5.0f}  {ws.plants_consumed:>5.0f}")
-            except curses.error:
-                pass
+            diff = ws.plants_generated - ws.plants_consumed
+            diff_str = f"+{diff:.0f}" if diff >= 0 else f"{diff:.0f}"
+            diff_color = curses.color_pair(1) if diff > 0 else (curses.color_pair(2) if diff < 0 else 0)
+            prefix = f"{'Plant':10} {ws.plant_biomass:>6.0f}  "
+            self._safe_addstr(row, col + 2, prefix, 0, max_col)
+            self._safe_addstr(row, col + 2 + len(prefix), f"{diff_str:>5}", diff_color, max_col)
+            suffix = f"  {ws.plants_generated:>5.0f}  {ws.plants_consumed:>5.0f}"
+            self._safe_addstr(row, col + 2 + len(prefix) + 5, suffix, 0, max_col)
         row += 1
 
         return row
@@ -480,6 +486,7 @@ class TUIDisplay:
             return start_row
         max_y, _ = self.stdscr.getmaxyx()
         ws = self.world_stats
+        max_col = col + width
 
         row = start_row
         self._draw_section_header(row, col, "Vitals (Avg)", width)
@@ -487,20 +494,17 @@ class TUIDisplay:
 
         # Header
         if row < max_y:
-            with contextlib.suppress(curses.error):
-                self.stdscr.addstr(row, col + 2, f"{'':10} {'Hunger':>8}  {'Energy':>8}", curses.A_DIM)
+            self._safe_addstr(row, col + 2, f"{'':10} {'Hunger':>8}  {'Energy':>8}", curses.A_DIM, max_col)
         row += 1
 
         # Animal row
         if row < max_y:
-            with contextlib.suppress(curses.error):
-                self.stdscr.addstr(row, col + 2, f"{'Animal':10} {ws.avg_animal_hunger:>8.2f}  {ws.avg_animal_energy:>8.2f}")
+            self._safe_addstr(row, col + 2, f"{'Animal':10} {ws.avg_animal_hunger:>8.2f}  {ws.avg_animal_energy:>8.2f}", 0, max_col)
         row += 1
 
         # Human row
         if row < max_y:
-            with contextlib.suppress(curses.error):
-                self.stdscr.addstr(row, col + 2, f"{'Human':10} {ws.avg_human_hunger:>8.2f}  {ws.avg_human_energy:>8.2f}")
+            self._safe_addstr(row, col + 2, f"{'Human':10} {ws.avg_human_hunger:>8.2f}  {ws.avg_human_energy:>8.2f}", 0, max_col)
         row += 1
 
         return row
