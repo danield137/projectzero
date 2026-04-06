@@ -94,6 +94,8 @@ class TUIDisplay:
         self._prev_human_deaths_sum = 0
         self._prev_plants_generated_sum = 0.0
         self._prev_plants_consumed_sum = 0.0
+        self._last_render_time: float = 0.0
+        self._refresh_interval_ms: float = 0.0
 
     def start(self):
         """Initialize curses and set up the screen."""
@@ -265,6 +267,10 @@ class TUIDisplay:
             return
 
         self.last_render_tick = tick
+        now = time.time()
+        if self._last_render_time > 0:
+            self._refresh_interval_ms = (now - self._last_render_time) * 1000
+        self._last_render_time = now
         self.update_world_stats()
 
         try:
@@ -287,7 +293,7 @@ class TUIDisplay:
             self._draw_perf_compact(2, right_col, right_width)
 
             # Right side: Weather (below perf)
-            self._draw_weather_compact(7, right_col, right_width)
+            self._draw_weather_compact(8, right_col, right_width)
 
             # Left side: Population
             row = 2
@@ -359,6 +365,14 @@ class TUIDisplay:
                 self.stdscr.addstr(
                     row, col, f"ECS {self.perf_stats.ecs_used:,}  Frag {frag_pct:.0f}%", curses.A_DIM
                 )
+
+        row += 1
+        if row < max_y and self._refresh_interval_ms > 0:
+            with contextlib.suppress(curses.error):
+                if self._refresh_interval_ms >= 1000:
+                    self.stdscr.addstr(row, col, f"Refresh {self._refresh_interval_ms / 1000:.1f}s", curses.A_DIM)
+                else:
+                    self.stdscr.addstr(row, col, f"Refresh {self._refresh_interval_ms:.0f}ms", curses.A_DIM)
 
     def _draw_weather_compact(self, row: int, col: int, width: int):
         """Draw compact weather widget on the right side."""
