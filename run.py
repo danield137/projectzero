@@ -10,9 +10,9 @@ def main():
     parser.add_argument("-r", "--release", action="store_true", help="Run in release mode (disable memory tracking)")
     parser.add_argument("-d", "--debug", type=int, help="Debug a specific entity by ID")
     parser.add_argument(
-        "--tui",
+        "--no-tui",
         action="store_true",
-        help="Use TUI dashboard mode instead of log output"
+        help="Disable TUI dashboard, use log output instead"
     )
     parser.add_argument(
         "--tui-interval",
@@ -32,7 +32,7 @@ def main():
     config = RunConfiguration(debug_entity_id=args.debug)
     sim = Simulation(config)
 
-    if args.tui:
+    if not args.no_tui:
         from zero.tui import run_with_tui
         run_with_tui(
             sim,
