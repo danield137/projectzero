@@ -306,6 +306,9 @@ class TUIDisplay:
             # Right side: Weather (below perf)
             self._draw_weather_compact(9, right_col, right_width)
 
+            # Right side: System time breakdown (below weather)
+            self._draw_systems_section(12, right_col, right_width)
+
             # Left side: Population
             row = 2
             row = self._draw_population_section(row, left_col, left_width)
@@ -314,13 +317,9 @@ class TUIDisplay:
             row += 1
             row = self._draw_vitals_section(row, left_col, left_width)
 
-            # Full width: Activity distribution
+            # Left side: Activity distribution
             row += 1
-            row = self._draw_goals_section(row, max_x)
-
-            # Full width: System time breakdown
-            row += 1
-            row = self._draw_systems_section(row, max_x)
+            row = self._draw_goals_section(row, left_col, left_width)
 
             # Footer
             if max_y - 1 > 0:
@@ -513,14 +512,15 @@ class TUIDisplay:
 
         return row
 
-    def _draw_goals_section(self, start_row: int, max_x: int) -> int:
+    def _draw_goals_section(self, start_row: int, col: int, width: int) -> int:
         """Draw the activity distribution section."""
         if not self.stdscr:
             return start_row
         max_y, _ = self.stdscr.getmaxyx()
+        max_col = col + width
 
         row = start_row
-        self._draw_section_header(row, 2, "Activity")
+        self._draw_section_header(row, col, "Activity", width)
         row += 1
 
         for species, goals in self.world_stats.goals.items():
@@ -529,8 +529,7 @@ class TUIDisplay:
             if row >= max_y:
                 break
 
-            with contextlib.suppress(curses.error):
-                self.stdscr.addstr(row, 4, f"{species}:", curses.A_DIM)
+            self._safe_addstr(row, col + 2, f"{species}:", curses.A_DIM, max_col)
             row += 1
 
             sorted_goals = sorted(goals.items(), key=lambda x: x[1], reverse=True)
@@ -538,35 +537,27 @@ class TUIDisplay:
                 if row >= max_y:
                     break
                 if ratio > 0.01:
-                    try:
-                        bar_width = int(ratio * 20)
-                        bar = "█" * bar_width + "░" * (20 - bar_width)
-                        goal_short = goal[:10] if len(goal) > 10 else goal
-                        self.stdscr.addstr(row, 6, f"{goal_short:>10}  [{bar}] {ratio * 100:4.0f}%")
-                    except curses.error:
-                        pass
+                    bar_width = int(ratio * 20)
+                    bar = "█" * bar_width + "░" * (20 - bar_width)
+                    goal_short = goal[:10] if len(goal) > 10 else goal
+                    self._safe_addstr(row, col + 4, f"{goal_short:>10}  [{bar}] {ratio * 100:4.0f}%", 0, max_col)
                     row += 1
 
         return row
 
-    def _draw_systems_section(self, start_row: int, max_x: int) -> int:
-        """Draw per-system time breakdown."""
+    def _draw_systems_section(self, start_row: int, col: int, width: int) -> int:
+        """Draw per-system time breakdown on the right side."""
         if not self.stdscr or not self.perf_stats.system_times:
             return start_row
         max_y, _ = self.stdscr.getmaxyx()
 
         row = start_row
-        self._draw_section_header(row, 2, "Systems")
+        self._draw_section_header(row, col, "Systems", width)
         row += 1
 
         total_ms = sum(self.perf_stats.system_times.values())
         if total_ms == 0:
             return row
-
-        # Header
-        if row < max_y:
-            self._safe_addstr(row, 4, f"{'System':<16} {'Time':>10}  {'%':>5}  {'':20}", curses.A_DIM)
-        row += 1
 
         sorted_systems = sorted(self.perf_stats.system_times.items(), key=lambda x: x[1], reverse=True)
         for name, ms in sorted_systems:
@@ -574,16 +565,13 @@ class TUIDisplay:
                 break
             short_name = name.replace("System", "")
             pct = (ms / total_ms) * 100 if total_ms > 0 else 0
-            bar_width = int(pct / 5)  # 20 chars = 100%
-            bar = "█" * bar_width + "░" * (20 - bar_width)
 
             if ms >= 1.0:
-                time_str = f"{ms:.2f}ms"
+                time_str = f"{ms:.1f}ms"
             else:
                 time_str = f"{ms * 1000:.0f}µs"
 
-            with contextlib.suppress(curses.error):
-                self.stdscr.addstr(row, 4, f"{short_name:<16} {time_str:>10}  {pct:>4.0f}%  [{bar}]")
+            self._safe_addstr(row, col + 2, f"{short_name:<12} {time_str:>7} {pct:>3.0f}%", curses.A_DIM)
             row += 1
 
         return row
