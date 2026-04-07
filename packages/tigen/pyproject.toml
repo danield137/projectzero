@@ -1,7 +1,7 @@
 [project]
 name = "tigen"
 version = "0.2.1"
-description = "A lightweight ECS-based simulation engine"
+description = "tigen — Tiny Game Engine: a lightweight ECS-based simulation engine"
 authors = [
     {name = "Daniel Dror", email = "danield137@gmail.com"},
 ]

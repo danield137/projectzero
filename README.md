@@ -7,7 +7,7 @@ A learning project exploring game design, simulation architecture, and AI in gam
 Project Zero simulates a miniature world where plants grow, animals hunt, and humans reason — all driven by composable systems and lightweight AI. It's an educational sandbox for learning how simulations, ECS engines, and game AI work by building them from scratch.
 
 **Key features:**
-- **ECS engine ([tigen](https://pypi.org/project/tigen/))** — generational entity IDs, typed components, system-based updates
+- **ECS engine ([tigen](https://pypi.org/project/tigen/) — Tiny Game Engine)** — generational entity IDs, typed components, system-based updates
 - **AI module** — brain/memory/context abstractions with goal-directed planning
 - **Ecological simulation** — weather, photosynthesis, hunger, energy, reproduction, health
 - **TUI dashboard** — terminal-based live visualization

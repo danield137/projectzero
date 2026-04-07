@@ -1,4 +1,4 @@
-# tigen
+# tigen — Tiny Game Engine
 
 A lightweight ECS (Entity Component System) based simulation engine.
 
