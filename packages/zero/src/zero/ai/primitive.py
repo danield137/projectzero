@@ -1,11 +1,11 @@
 import enum
 from typing import cast
 
-from simz.ai import ActionStep
-from simz.ai.brain import GoalSelector, Planner
-from simz.ai.context import BrainContext
-from simz.ai.memory import MemoryFact, MemQuery
-from simz.common.logging import get_logger
+from tigen.ai import ActionStep
+from tigen.ai.brain import GoalSelector, Planner
+from tigen.ai.context import BrainContext
+from tigen.ai.memory import MemoryFact, MemQuery
+from tigen.common.logging import get_logger
 from zero.ai.actions import (
     EatAction,
     ExploreAction,

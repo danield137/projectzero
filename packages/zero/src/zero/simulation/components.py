@@ -12,8 +12,8 @@ from typing import (
     runtime_checkable,
 )
 
-from simz.ai.memory import MemoryData
-from simz.ecs.component import (
+from tigen.ai.memory import MemoryData
+from tigen.ecs.component import (
     BoolComponent,
     ClassComponent,
     IntComponent,

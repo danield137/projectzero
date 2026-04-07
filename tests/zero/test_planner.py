@@ -1,4 +1,4 @@
-from simz.ai.memory import MemoryData, MemoryFact, PerfectMemory
+from tigen.ai.memory import MemoryData, MemoryFact, PerfectMemory
 from zero.ai.actions import (
     EatAction,
     ExploreAction,

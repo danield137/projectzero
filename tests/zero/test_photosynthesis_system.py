@@ -1,4 +1,4 @@
-from simz.ecs.core import ECS
+from tigen.ecs.core import ECS
 from zero.simulation.components import (
     DayNightCycleComponent,
     GrowthComponent,

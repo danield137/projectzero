@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 from typing import Any
 
-from simz.ai import ActionStep
+from tigen.ai import ActionStep
 
 
 @dataclass(frozen=True, slots=True)

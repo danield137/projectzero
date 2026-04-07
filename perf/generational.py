@@ -8,7 +8,7 @@ from typing import List
 
 import pyperf
 
-from simz.common.ds.generational import GenerationalContainer
+from tigen.common.ds.generational import GenerationalContainer
 
 
 # Benchmark functions

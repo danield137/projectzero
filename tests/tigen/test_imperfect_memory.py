@@ -1,4 +1,4 @@
-from simz.ai.memory import ImperfectMemory, MemoryData, MemoryFact, MemQuery
+from tigen.ai.memory import ImperfectMemory, MemoryData, MemoryFact, MemQuery
 
 
 def test_imperfect_memory_remember():

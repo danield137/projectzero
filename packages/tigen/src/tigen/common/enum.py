@@ -3,7 +3,7 @@ from __future__ import annotations
 from enum import IntEnum
 from typing import TypeVar
 
-from simz.common.math import clamp
+from tigen.common.math import clamp
 
 T = TypeVar("T", bound="MonotonicEnum")
 

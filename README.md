@@ -7,7 +7,7 @@ A learning project exploring game design, simulation architecture, and AI in gam
 Project Zero simulates a miniature world where plants grow, animals hunt, and humans reason — all driven by composable systems and lightweight AI. It's an educational sandbox for learning how simulations, ECS engines, and game AI work by building them from scratch.
 
 **Key features:**
-- **ECS engine ([simz](https://pypi.org/project/simz/))** — generational entity IDs, typed components, system-based updates
+- **ECS engine ([tigen](https://pypi.org/project/tigen/))** — generational entity IDs, typed components, system-based updates
 - **AI module** — brain/memory/context abstractions with goal-directed planning
 - **Ecological simulation** — weather, photosynthesis, hunger, energy, reproduction, health
 - **TUI dashboard** — terminal-based live visualization
@@ -35,8 +35,8 @@ uv run pytest
 ```
 projectzero/
 ├── packages/
-│   ├── sim/              # simz — standalone ECS simulation engine
-│   │   └── src/simz/
+│   ├── sim/              # tigen — standalone ECS simulation engine
+│   │   └── src/tigen/
 │   │       ├── ecs/      # Entity-Component-System core
 │   │       ├── ai/       # Brain, memory, context abstractions
 │   │       └── common/   # Math, logging, data structures
@@ -52,10 +52,10 @@ projectzero/
 └── run.py                # Entry point
 ```
 
-This is a **uv workspace** monorepo. The `simz` engine is published independently on [PyPI](https://pypi.org/project/simz/) and can be used in other projects:
+This is a **uv workspace** monorepo. The `tigen` engine is published independently on [PyPI](https://pypi.org/project/tigen/) and can be used in other projects:
 
 ```bash
-pip install simz
+pip install tigen
 ```
 
 ## How It Works

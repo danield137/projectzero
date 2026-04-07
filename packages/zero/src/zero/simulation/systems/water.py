@@ -1,4 +1,4 @@
-from simz.ecs.system import System
+from tigen.ecs.system import System
 from zero.simulation.components import HydrationComponent, WeatherConditionsComponent
 
 

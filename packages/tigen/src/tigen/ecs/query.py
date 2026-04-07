@@ -2,7 +2,7 @@ import inspect
 from collections.abc import Callable
 from typing import TypeVar
 
-from simz.ecs.core import ECS
+from tigen.ecs.core import ECS
 
 T = TypeVar("T")
 

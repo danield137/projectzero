@@ -2,10 +2,10 @@ from collections.abc import Callable, Sequence
 from typing import Any
 from uuid import uuid4
 
-from simz.ai.memory import MemoryData
-from simz.common import math
-from simz.common.extensions import deep_freeze
-from simz.ecs.component import Component
+from tigen.ai.memory import MemoryData
+from tigen.common import math
+from tigen.common.extensions import deep_freeze
+from tigen.ecs.component import Component
 from zero.simulation.components import (
     ASSIGNABLE_GENDERS,
     ActivityComponent,

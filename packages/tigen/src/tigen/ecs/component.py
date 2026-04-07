@@ -3,7 +3,7 @@ import json
 from dataclasses import asdict, dataclass, field
 from typing import Generic, TypeVar
 
-from simz.common.math import EPSILON
+from tigen.common.math import EPSILON
 
 
 @dataclass(slots=True)

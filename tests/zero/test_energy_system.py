@@ -1,8 +1,8 @@
 import math
 from typing import Set
 
-from simz.common.math import EPSILON
-from simz.ecs.core import ECS
+from tigen.common.math import EPSILON
+from tigen.ecs.core import ECS
 from zero.simulation.components import (
     ActivityComponent,
     EnergyComponent,

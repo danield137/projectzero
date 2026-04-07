@@ -1,6 +1,6 @@
 import numpy as np
 
-from simz.common.math import (
+from tigen.common.math import (
     RandomChoiceMode,
     clamp,
     cosine,

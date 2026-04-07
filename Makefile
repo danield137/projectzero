@@ -3,11 +3,11 @@
 fmt: format check
 
 format:
-	ruff format packages/simz/src packages/zero/src
+	ruff format packages/tigen/src packages/zero/src
 
 check:
-	ruff check packages/simz/src packages/zero/src --fix
-	ty check packages/simz/src packages/zero/src
+	ruff check packages/tigen/src packages/zero/src --fix
+	ty check packages/tigen/src packages/zero/src
 
 test:
 	pytest

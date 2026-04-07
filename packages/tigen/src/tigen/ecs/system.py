@@ -1,7 +1,7 @@
 import abc
 
-from simz.config import RunConfiguration, get_global_config
-from simz.ecs.core import ECS
+from tigen.config import RunConfiguration, get_global_config
+from tigen.ecs.core import ECS
 
 
 class System(abc.ABC):

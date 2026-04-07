@@ -10,12 +10,12 @@ from typing import Any, cast
 
 from termcolor import colored
 
-from simz.common import logging
-from simz.common.ds.generational import GenerationalDict
-from simz.common.formatting import human_readable_bytes, human_readable_time_measurement
-from simz.config import RunConfiguration, set_global_config
-from simz.ecs.core import ECS
-from simz.ecs.system import System
+from tigen.common import logging
+from tigen.common.ds.generational import GenerationalDict
+from tigen.common.formatting import human_readable_bytes, human_readable_time_measurement
+from tigen.config import RunConfiguration, set_global_config
+from tigen.ecs.core import ECS
+from tigen.ecs.system import System
 from zero.simulation.components import (
     GrowthComponent,
     LocalTimeComponent,

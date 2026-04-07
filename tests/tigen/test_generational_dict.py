@@ -1,6 +1,6 @@
 import pytest
 
-from simz.common.ds.generational import (
+from tigen.common.ds.generational import (
     GenerationalDefaultDict,
     GenerationalDict,
     IsolationLevel,

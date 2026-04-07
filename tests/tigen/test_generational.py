@@ -3,7 +3,7 @@ import pytest
 # These imports assume that the provided implementation is placed in a module,
 # for example in a file named generational.py.
 # Adjust the module name below as needed.
-from simz.common.ds.generational import GenerationalContainer, IsolationLevel
+from tigen.common.ds.generational import GenerationalContainer, IsolationLevel
 
 
 def test_insert_and_get():

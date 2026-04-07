@@ -6,7 +6,7 @@ authors = [
     {name = "Daniel Dror", email = "danield137@gmail.com"},
 ]
 dependencies = [
-    "simz",
+    "tigen",
     "termcolor>=2.5.0",
     "psutil>=7.2.1",
 ]
@@ -14,7 +14,7 @@ requires-python = "==3.10.*"
 license = "MIT"
 
 [tool.uv.sources]
-simz = { workspace = true }
+tigen = { workspace = true }
 
 [build-system]
 requires = ["hatchling"]

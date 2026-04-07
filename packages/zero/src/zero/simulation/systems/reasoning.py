@@ -6,14 +6,14 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from typing import cast
 
-from simz.ai.brain import Brain
-from simz.ai.context import BrainContext
-from simz.ai.memory import MemoryFact
-from simz.common.enum import TriStateEnum
-from simz.common.logging import get_logger
-from simz.config import get_global_config
-from simz.ecs.core import ECS
-from simz.ecs.system import System
+from tigen.ai.brain import Brain
+from tigen.ai.context import BrainContext
+from tigen.ai.memory import MemoryFact
+from tigen.common.enum import TriStateEnum
+from tigen.common.logging import get_logger
+from tigen.config import get_global_config
+from tigen.ecs.core import ECS
+from tigen.ecs.system import System
 from zero.ai.actions import ActionStep
 from zero.ai.brains import get_predefined_brain
 from zero.ai.context import (

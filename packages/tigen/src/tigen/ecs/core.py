@@ -11,14 +11,14 @@ from typing import Any, TypeVar, cast
 
 from termcolor import colored
 
-from simz.common.ds.generational import (
+from tigen.common.ds.generational import (
     GenerationalDefaultDict,
     GenerationalDict,
     IsolationLevel,
 )
-from simz.common.extensions import equals
-from simz.common.logging import Verbosity, get_logger
-from simz.ecs.component import Component
+from tigen.common.extensions import equals
+from tigen.common.logging import Verbosity, get_logger
+from tigen.ecs.component import Component
 
 logger = get_logger()
 

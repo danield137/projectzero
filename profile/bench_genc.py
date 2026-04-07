@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from line_profiler import LineProfiler
 
 # bench_genc.py
-from simz.common.ds.generational import GenerationalContainer, IsolationLevel
+from tigen.common.ds.generational import GenerationalContainer, IsolationLevel
 
 profile = LineProfiler()  # kernprof will call print_stats on this
 

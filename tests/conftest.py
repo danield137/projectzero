@@ -1,7 +1,7 @@
 import pytest
 
 from tests import add_singleton_components
-from simz.ecs.core import ECS
+from tigen.ecs.core import ECS
 
 
 @pytest.fixture

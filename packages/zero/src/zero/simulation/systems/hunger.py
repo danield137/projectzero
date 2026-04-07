@@ -5,12 +5,12 @@ from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import ClassVar, cast
 
-from simz.ai.memory import Memory
-from simz.common import logging
-from simz.common.enum import MonotonicEnum
-from simz.config import get_global_config
-from simz.ecs.core import ECS
-from simz.ecs.system import System
+from tigen.ai.memory import Memory
+from tigen.common import logging
+from tigen.common.enum import MonotonicEnum
+from tigen.config import get_global_config
+from tigen.ecs.core import ECS
+from tigen.ecs.system import System
 from zero.ai.brains import get_memory_engine
 from zero.simulation.components import (
     ActivityComponent,

@@ -1,8 +1,8 @@
 from typing import cast
 
-from simz.common import logging
-from simz.common.enum import MonotonicEnum
-from simz.ecs.system import System
+from tigen.common import logging
+from tigen.common.enum import MonotonicEnum
+from tigen.ecs.system import System
 from zero.simulation.components import (
     ActivityComponent,
     EnergyComponent,

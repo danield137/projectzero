@@ -620,7 +620,7 @@ def run_with_tui(
     import tracemalloc
     from collections import defaultdict
 
-    from simz.common import logging
+    from tigen.common import logging
     from zero.simulation.components import SummarizedStatsComponent
 
     tui = TUIDisplay(sim, update_interval=update_interval)

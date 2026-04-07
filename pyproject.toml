@@ -2,7 +2,7 @@
 members = ["packages/*"]
 
 [tool.uv.sources]
-simz = { workspace = true }
+tigen = { workspace = true }
 
 [tool.ruff]
 line-length = 120

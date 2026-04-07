@@ -23,8 +23,8 @@ import random
 import time
 from dataclasses import dataclass, field
 
-from simz.ecs.component import ClassComponent, ClampedFloatComponent
-from simz.ecs.core import ECS
+from tigen.ecs.component import ClassComponent, ClampedFloatComponent
+from tigen.ecs.core import ECS
 
 
 # ── Dummy components ────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-# simz
+# tigen
 
 A lightweight ECS (Entity Component System) based simulation engine.
 
@@ -12,15 +12,15 @@ A lightweight ECS (Entity Component System) based simulation engine.
 ## Installation
 
 ```bash
-pip install simz
+pip install tigen
 ```
 
 ## Quick Start
 
 ```python
-from simz.ecs.core import ECS
-from simz.ecs.component import Component
-from simz.ecs.system import System
+from tigen.ecs.core import ECS
+from tigen.ecs.component import Component
+from tigen.ecs.system import System
 
 # Define components
 class Position(Component):

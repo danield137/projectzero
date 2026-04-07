@@ -1,4 +1,4 @@
-from simz.ai.memory import MemoryData, MemoryFact, MemQuery, PerfectMemory
+from tigen.ai.memory import MemoryData, MemoryFact, MemQuery, PerfectMemory
 
 
 def test_memory_fact_creation():

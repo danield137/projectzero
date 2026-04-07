@@ -1,7 +1,7 @@
 from typing import Callable, List, Tuple
 
-from simz.ecs.core import ECS
-from simz.ecs.system import System
+from tigen.ecs.core import ECS
+from tigen.ecs.system import System
 from zero.simulation.entities import EntitiesFactory
 
 
