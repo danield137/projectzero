@@ -11,6 +11,7 @@ from zero.simulation.components import (  # BirthdayComponent,
     HungerComponent,
     IdleActivity,
     MatingActivity,
+    PositionComponent,
     PregnancyComponent,
     ReproductiveComponent,
     WellbeingComponent,
@@ -18,18 +19,28 @@ from zero.simulation.components import (  # BirthdayComponent,
 
 logger = logging.get_logger()
 
+MATE_SEARCH_RADIUS = 10
+
 
 def find_mate(target_gender: Gender, eid: int, ecs: ECS) -> int | None:
     etype = ecs.entities_by_id[eid]
+    my_pos = ecs.get_typed_component(eid, PositionComponent)
+
     for candidate in ecs.get_entities_with_typed_component(ReproductiveComponent, etype):
         candidate_repro = ecs.get_typed_component(candidate, ReproductiveComponent)
         if candidate_repro.gender == target_gender and candidate != eid:
+            # Proximity check
+            if my_pos:
+                cand_pos = ecs.get_typed_component(candidate, PositionComponent)
+                if cand_pos:
+                    dist = abs(my_pos.x - cand_pos.x) + abs(my_pos.y - cand_pos.y)
+                    if dist > MATE_SEARCH_RADIUS:
+                        continue
+
             prev_mate = ecs.get_typed_component(candidate, FamilyComponent).mate
-            # TODO: IRL, this isn't required (monogamy is not a requirement for mating). Keeping it here for simplicity for now.
             if prev_mate is None:
                 return candidate
             if not ecs.entity_exists(prev_mate):
-                # the previous mate is dead, so we can use this candidate
                 return candidate
     return None
 
