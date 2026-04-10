@@ -268,30 +268,35 @@ class Simulation:
             assert system.validate(), "System %s failed validation" % system.__class__.__name__
 
     def set_starting_conditions(self):
+        import random
+
         logger.info("Creating static entities...")
-        # TODO: I don't like this approach. I tend to forget that there is such a thing as a metadata entity.
-        # Effectively, these components are all part of a stats system, but they don't really make up an entity per se.
         self.ecs.create_singleton_entity(*EntitiesFactory.metadata_entity())
         self.ecs.create_singleton_entity(*EntitiesFactory.create_config_entity())
-        # Create the Earth entity (World)
         self.ecs.create_entity(*EntitiesFactory.create_world("Earth"))
-        # Create a global weather entity
         self.ecs.create_entity(*EntitiesFactory.create_weather())
-        logger.info("Creating dynamic entities...")
-        # Create a few plants
-        for i in range(200):
-            self.ecs.create_entity(*EntitiesFactory.create_plant(f"Plant_{i}"))
 
-        # Create a couple of animals
+        w, h = self.config.world_width, self.config.world_height
+        logger.info("Creating dynamic entities on %dx%d grid...", w, h)
+
+        # Plants: scattered randomly across the grid
+        for i in range(200):
+            pos = (random.randint(0, w - 1), random.randint(0, h - 1))
+            self.ecs.create_entity(*EntitiesFactory.create_plant(f"Plant_{i}", position=pos))
+
+        # Animals: spawned in a cluster near center
+        cx, cy = w // 2, h // 2
         animal_spawner = EntitiesFactory.gender_balanced_spawner(EntitiesFactory.create_animal, prefix="Animal")
         for _ in range(4):
-            etype, comps = animal_spawner()
+            pos = (cx + random.randint(-2, 2), cy + random.randint(-2, 2))
+            etype, comps = animal_spawner(position=pos)
             self.ecs.create_entity(etype, comps)
 
-        # Create a couple of humans
+        # Humans: spawned in a cluster near center
         human_spawner = EntitiesFactory.gender_balanced_spawner(EntitiesFactory.create_human, prefix="Human")
         for _ in range(2):
-            etype, comps = human_spawner()
+            pos = (cx + random.randint(-2, 2), cy + random.randint(-2, 2))
+            etype, comps = human_spawner(position=pos)
             self.ecs.create_entity(etype, comps)
 
     def run(self, max_ticks: int | None = None, debug_mode: bool = True):

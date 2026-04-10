@@ -67,6 +67,12 @@ class PhotosynthesisComponent(BoolComponent): ...
 
 
 @dataclass(slots=True)
+class PositionComponent(ClassComponent):
+    x: int
+    y: int
+
+
+@dataclass(slots=True)
 class EdibleComponent(ClassComponent):
     nutrition: float
     food_type: FoodType

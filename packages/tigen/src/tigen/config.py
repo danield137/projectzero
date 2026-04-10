@@ -8,6 +8,8 @@ class RunConfiguration:
     """Configuration object for simulation runtime settings."""
 
     debug_entity_id: int | None = None
+    world_width: int = 30
+    world_height: int = 30
 
     @staticmethod
     def default() -> RunConfiguration:

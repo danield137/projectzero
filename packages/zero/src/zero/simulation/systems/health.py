@@ -14,6 +14,7 @@ from zero.simulation.components import (
     EntitiesConfigComponent,
     HealthComponent,
     LifeExpectancyComponent,
+    PositionComponent,
     PregnancyComponent,
     StatsComponent,
     WellbeingComponent,
@@ -164,7 +165,9 @@ class HealthSystem(System):
 
     def handle_birth(self, ha: HealthAspect, simulation_time: int) -> int:
         mate = cast(PregnancyComponent, ha.wellbeing.pregnancy).mate
-        born = ha.give_birth(lambda family, name: create_child(self.ecs, ha.etype, family, name, simulation_time))
+        mother_pos = self.ecs.get_typed_component(ha.entity, PositionComponent)
+        pos = (mother_pos.x, mother_pos.y) if mother_pos else (0, 0)
+        born = ha.give_birth(lambda family, name: create_child(self.ecs, ha.etype, family, name, simulation_time, pos))
         if born > 0:
             self.ecs.update_typed_component(ha.entity, ha.family)
             if mate and self.ecs.entity_exists(mate):
@@ -215,11 +218,11 @@ class HealthSystem(System):
 # This used to be in the LifeSystem (what is now the HealthSystem) and it made sense.
 # HealthSystem was made so that it makes more sense to handle both health related conditions, and birth/death.
 # It could be it would make sense to split those two systems again, but for now, let's keep it simple.
-def create_child(ecs: ECS, etype: str, baby_family: FamilyComponent, name: str, simulation_time: int) -> int:
+def create_child(ecs: ECS, etype: str, baby_family: FamilyComponent, name: str, simulation_time: int, position: tuple[int, int] = (0, 0)) -> int:
     if etype == EntityTypes.HUMAN:
-        child_type, child_comp = EntitiesFactory.create_human(name, family=baby_family, birthday=simulation_time)
+        child_type, child_comp = EntitiesFactory.create_human(name, family=baby_family, birthday=simulation_time, position=position)
     elif etype == EntityTypes.ANIMAL:
-        child_type, child_comp = EntitiesFactory.create_animal(name, family=baby_family, birthday=simulation_time)
+        child_type, child_comp = EntitiesFactory.create_animal(name, family=baby_family, birthday=simulation_time, position=position)
     else:
         raise ValueError(f"Unknown entity type: {etype}")
     return ecs.create_entity(child_type, child_comp)

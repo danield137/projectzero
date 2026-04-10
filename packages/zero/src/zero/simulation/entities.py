@@ -29,6 +29,7 @@ from zero.simulation.components import (
     MemoryComponent,
     NameComponent,
     PhotosynthesisComponent,
+    PositionComponent,
     PregnancyComponent,
     PrimitiveGoal,
     ReproductiveComponent,
@@ -162,14 +163,16 @@ class EntitiesFactory:
         ]
 
     @staticmethod
-    def create_plant(name: str | None = None) -> tuple[str, Sequence[Component]]:
+    def create_plant(name: str | None = None, position: tuple[int, int] | None = None) -> tuple[str, Sequence[Component]]:
+        pos = position or (0, 0)
         return EntityTypes.PLANT, [
             NameComponent(name or "Plant"),
+            PositionComponent(pos[0], pos[1]),
             GrowthComponent(1 / 3.0, 1.0),
             HydrationComponent(3.0),
             BirthdayComponent(0),
             PhotosynthesisComponent(True),
-            EdibleComponent(nutrition=5.0, food_type=FoodType.PLANT),  # Plants provide moderate nutrition
+            EdibleComponent(nutrition=5.0, food_type=FoodType.PLANT),
         ]
 
     # TODO: sex is something that we need to probably assign from outside and not pick randomly here.
@@ -181,6 +184,7 @@ class EntitiesFactory:
         pre_existing_gender_dist: list[int] | None = None,
         family: FamilyComponent | None = None,
         birthday: int = 0,
+        position: tuple[int, int] | None = None,
     ) -> tuple[str, Sequence[Component]]:
         gender = math.random_choice(
             ASSIGNABLE_GENDERS,
@@ -198,10 +202,12 @@ class EntitiesFactory:
         )
         name = name or str(uuid4())
         family_comp: FamilyComponent = family or FamilyComponent.default((0, 0))
+        pos = position or (0, 0)
 
         return EntityTypes.ANIMAL, [
             # general components
             NameComponent(name),
+            PositionComponent(pos[0], pos[1]),
             BirthdayComponent(birthday),
             LifeExpectancyComponent(life_expectancy),
             # state components
@@ -231,6 +237,7 @@ class EntitiesFactory:
         pre_existing_gender_dist: list[int] | None = None,
         family: FamilyComponent | None = None,
         birthday: int = 0,
+        position: tuple[int, int] | None = None,
     ) -> tuple[str, Sequence[Component]]:
         gender = math.random_choice(
             ASSIGNABLE_GENDERS,
@@ -248,10 +255,12 @@ class EntitiesFactory:
         )
         name = name or str(uuid4())
         family_comp: FamilyComponent = family or FamilyComponent.default((0, 0))
+        pos = position or (0, 0)
 
         return EntityTypes.HUMAN, [
             # general components
             NameComponent(name),
+            PositionComponent(pos[0], pos[1]),
             BirthdayComponent(birthday),
             LifeExpectancyComponent(life_expectancy),
             # state components
@@ -278,26 +287,27 @@ class EntitiesFactory:
         create_fn: Callable[..., tuple[str, Sequence[Component]]],
         *,
         prefix: str,
-    ) -> Callable[[], tuple[str, Sequence[Component]]]:
+    ) -> Callable[..., tuple[str, Sequence[Component]]]:
         """
-        Returns a zero-arg closure that spawns entities with near-uniform gender
-        distribution each time it is called.
+        Returns a closure that spawns entities with near-uniform gender
+        distribution each time it is called. Accepts **kwargs to pass through
+        to the create function (e.g. position).
 
         Example
         -------
         animal_spawner = EntitiesFactory.gender_balanced_spawner(
             EntitiesFactory.create_animal, prefix="Animal"
         )
-        etype, comps = animal_spawner()  # call as many times as needed
+        etype, comps = animal_spawner(position=(5, 5))
         """
         counter = 0
         gender_counts = [0, 0]  # [M, F]
 
-        def _spawn() -> tuple[str, Sequence[Component]]:
+        def _spawn(**kwargs: Any) -> tuple[str, Sequence[Component]]:
             nonlocal counter, gender_counts
             name = f"{prefix}_{counter}"
             counter += 1
-            etype, comps = create_fn(name, gender_counts)
+            etype, comps = create_fn(name, gender_counts, **kwargs)
             repro = next(c for c in comps if isinstance(c, ReproductiveComponent))
             gender_idx = 1 if repro.gender == "F" else 0
             gender_counts[gender_idx] += 1
