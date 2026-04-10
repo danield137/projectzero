@@ -39,3 +39,4 @@ class PrimitiveBrainContext(BrainContext):
     energy: float
     is_pregnant: bool
     rules: PrimitiveWorldRules | None = None
+    nearby_same_species: list[tuple[int, int, int]] = ()  # (eid, x, y) of perceived same-species entities

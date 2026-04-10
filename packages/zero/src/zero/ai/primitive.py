@@ -120,9 +120,16 @@ class PrimitivePlanner(Planner[PrimitiveGoal]):
         if goal == PrimitiveGoal.EAT:
             return self.plan_eat(ctx)
         if goal == PrimitiveGoal.IDLE:
-            return []
+            return self.plan_idle(ctx)
         if goal == PrimitiveGoal.SLEEP:
             return self.plan_sleep(ctx)
         if goal == PrimitiveGoal.REPRODUCE:
             return self.plan_reproduce(ctx)
         return []
+
+    def plan_idle(self, ctx: PrimitiveBrainContext) -> list[ActionStep]:
+        if ctx.nearby_same_species:
+            # Drift toward nearest same-species entity (herd behavior)
+            nearest = min(ctx.nearby_same_species, key=lambda e: abs(e[1]) + abs(e[2]))
+            return [WalkToAction((nearest[1], nearest[2]))]
+        return [ExploreAction(1)]

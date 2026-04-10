@@ -251,6 +251,17 @@ class ReasoningAspect:
         )
         # manually_add_food_to_memory(eid, ecs, brain_impl, memory, simulation_time, rules.can_eat)
 
+        # Gather nearby same-species entities for herd behavior
+        perception = ecs.get_typed_component(eid, PerceptionComponent)
+        nearby_same: list[tuple[int, int, int]] = []
+        if perception:
+            my_species = ecs.entities_by_id[eid]
+            for p in perception.nearby:
+                if p.etype == my_species:
+                    p_pos = ecs.get_typed_component(p.eid, PositionComponent)
+                    if p_pos:
+                        nearby_same.append((p.eid, p_pos.x, p_pos.y))
+
         ctx = PrimitiveBrainContext(
             simulation_time=simulation_time,
             eid=eid,
@@ -261,6 +272,7 @@ class ReasoningAspect:
             memory_data=memory.data,
             memory_engine=brain_impl.memory,
             rules=rules,
+            nearby_same_species=nearby_same,
         )
         return ReasoningAspect(
             activity, health_conditions, energy, hunger, brain, brain_impl, memory, ctx, simulation_time
