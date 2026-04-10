@@ -22,6 +22,7 @@ from zero.simulation.components import (
     GrowthComponent,
     HungerComponent,
     MemoryComponent,
+    PositionComponent,
     StatsComponent,
     WellbeingComponent,
     WellbeingConditionComponent,
@@ -168,6 +169,18 @@ class HungerSystem(System):
             if activity.activity.is_eating():
                 eating_activity = cast(EatingActivity, activity.activity)
                 if self.ecs.entity_exists(eating_activity.food):
+                    # Proximity check: can only eat food on same or adjacent tile
+                    eater_pos = self.ecs.get_typed_component(entity, PositionComponent)
+                    food_pos = self.ecs.get_typed_component(eating_activity.food, PositionComponent)
+                    if eater_pos and food_pos:
+                        dist = abs(eater_pos.x - food_pos.x) + abs(eater_pos.y - food_pos.y)
+                        if dist > 1:
+                            # Too far away — can't eat, treat as natural hunger
+                            hunger_aspect.adjust_hunger_naturally()
+                            self.ecs.update_typed_component(entity, hunger_aspect.hunger)
+                            self.ecs.update_typed_component(entity, hunger_aspect.wellbeing)
+                            continue
+
                     food_edible = self.ecs.get_typed_component(eating_activity.food, EdibleComponent)
                     nutrition_multiplier = food_edible.nutrition
                     if self.config.debug_entity_id and entity == self.config.debug_entity_id:

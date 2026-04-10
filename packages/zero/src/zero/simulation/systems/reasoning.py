@@ -32,6 +32,8 @@ from zero.simulation.components import (
     FoodType,
     HungerComponent,
     MemoryComponent,
+    PerceptionComponent,
+    PositionComponent,
     StatsComponent,
     WellbeingComponent,
 )
@@ -98,12 +100,16 @@ def add_food_facts_for_eater(
     ecs: ECS,
 ) -> None:
     """
-    Add food facts to an eater's memory using pre-computed edible groups.
-    This is the optimized replacement for manually_add_food_to_memory.
+    Add food facts to an eater's memory using perception (only nearby food).
     """
     debug_entity_id = get_global_config().debug_entity_id
 
-    # Determine which food types this eater can consume
+    # Get perceived nearby entities
+    perception = ecs.get_typed_component(eater_id, PerceptionComponent)
+    if not perception:
+        return
+    perceived_ids = {p.eid for p in perception.nearby}
+
     food_types_to_check: list[FoodType] = []
     if diet.diet_type in (DietType.HERBIVORE, DietType.OMNIVORE):
         food_types_to_check.append(FoodType.PLANT)
@@ -114,21 +120,25 @@ def add_food_facts_for_eater(
         species_groups = edible_groups[food_type]
 
         for species, food_ids in species_groups.items():
-            # Check cannibalism rules
             if species == eater_species and not diet.allow_cannibalism:
                 continue
 
             for food_id in food_ids:
-                if food_id == eater_id:  # Skip self
+                if food_id == eater_id:
+                    continue
+                if food_id not in perceived_ids:
                     continue
 
                 fid = f"food_{food_id}"
-                if memory.data.exists(fid):  # Skip if already in memory
+                if memory.data.exists(fid):
                     continue
 
-                # Create memory fact only when needed
+                # Get food's actual position
+                food_pos = ecs.get_typed_component(food_id, PositionComponent)
+                location = (food_pos.x, food_pos.y) if food_pos else (0, 0)
+
                 if debug_entity_id and eater_id == debug_entity_id:
-                    logger.debug("Entity %s adding food %s to memory", eater_id, food_id)
+                    logger.debug("Entity %s adding food %s at %s to memory", eater_id, food_id, location)
 
                 brain_impl.memory.remember(
                     memory.data,
@@ -137,9 +147,9 @@ def add_food_facts_for_eater(
                         "food",
                         simulation_time,
                         {
-                            "owned": True,
+                            "owned": False,
                             "id": food_id,
-                            "location": "unknown",
+                            "location": location,
                             "species": species,
                             "food_type": food_type,
                         },
