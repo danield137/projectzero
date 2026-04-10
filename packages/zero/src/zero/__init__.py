@@ -287,15 +287,15 @@ class Simulation:
         # Animals: spawned in a cluster near center
         cx, cy = w // 2, h // 2
         animal_spawner = EntitiesFactory.gender_balanced_spawner(EntitiesFactory.create_animal, prefix="Animal")
-        for _ in range(4):
-            pos = (cx + random.randint(-2, 2), cy + random.randint(-2, 2))
+        for _ in range(10):
+            pos = (cx + random.randint(-3, 3), cy + random.randint(-3, 3))
             etype, comps = animal_spawner(position=pos)
             self.ecs.create_entity(etype, comps)
 
         # Humans: spawned in a cluster near center
         human_spawner = EntitiesFactory.gender_balanced_spawner(EntitiesFactory.create_human, prefix="Human")
-        for _ in range(2):
-            pos = (cx + random.randint(-2, 2), cy + random.randint(-2, 2))
+        for _ in range(6):
+            pos = (cx + random.randint(-3, 3), cy + random.randint(-3, 3))
             etype, comps = human_spawner(position=pos)
             self.ecs.create_entity(etype, comps)
 

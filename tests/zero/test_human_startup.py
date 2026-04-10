@@ -34,20 +34,20 @@ def test_startup_creates_two_humans():
     sim.setup_simulation()
     sim.set_starting_conditions()
 
-    # Check that exactly 2 humans were created
+    # Check that exactly 6 humans were created
     human_count = len(sim.ecs.entities_by_type.get(EntityTypes.HUMAN, []))
-    assert human_count == 2
+    assert human_count == 6
 
 
-def test_startup_creates_two_animals():
-    """Test that simulation startup still creates exactly two animals."""
+def test_startup_creates_animals():
+    """Test that simulation startup creates the expected number of animals."""
     sim = Simulation()
     sim.setup_simulation()
     sim.set_starting_conditions()
 
-    # Check that exactly 20 animals were created
+    # Check that exactly 10 animals were created
     animal_count = len(sim.ecs.entities_by_type.get(EntityTypes.ANIMAL, []))
-    assert animal_count == 20
+    assert animal_count == 10
 
 
 def test_spawner_creates_unique_names():
