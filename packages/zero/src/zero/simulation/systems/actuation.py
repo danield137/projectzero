@@ -4,8 +4,11 @@ from tigen.ai import ActionStep
 from tigen.ecs.system import System
 from zero.ai.actions import (
     ActionSteps,
+    DropAction,
     EatAction,
+    ExploreAction,
     MatingAction,
+    PickUpAction,
     SleepAction,
     WalkToAction,
 )
@@ -14,6 +17,7 @@ from zero.simulation.components import (
     BrainComponent,
     EatingActivity,
     MatingActivity,
+    PositionComponent,
     SleepingActivity,
 )
 
@@ -46,27 +50,60 @@ class ActuationSystem(System):
                 self._handle_sleep(eid, current_step, simulation_time)
             elif isinstance(current_step, MatingAction):
                 self._handle_mating(eid, current_step, simulation_time)
+            elif isinstance(current_step, ExploreAction):
+                self._handle_explore(eid, current_step, simulation_time)
+            elif isinstance(current_step, PickUpAction):
+                self._handle_pick_up(eid, current_step, simulation_time)
+            elif isinstance(current_step, DropAction):
+                self._handle_drop(eid, current_step, simulation_time)
 
     def _handle_walk_to(self, eid: int, action: WalkToAction, simulation_time: int):
-        # Pop this action since it was completed
+        pos = self.ecs.get_typed_component(eid, PositionComponent)
+        if not pos:
+            # No position — just skip the action
+            brain = self.ecs.get_typed_component(eid, BrainComponent)
+            cast(list[ActionStep], brain.current_plan).pop(0)
+            self.ecs.update_typed_component(eid, brain)
+            return
+
+        tx, ty = action.pos
+        dx = (tx > pos.x) - (tx < pos.x)
+        dy = (ty > pos.y) - (ty < pos.y)
+
+        if dx == 0 and dy == 0:
+            # Arrived — pop the action
+            brain = self.ecs.get_typed_component(eid, BrainComponent)
+            cast(list[ActionStep], brain.current_plan).pop(0)
+            self.ecs.update_typed_component(eid, brain)
+            return
+
+        pos.x += dx
+        pos.y += dy
+        self.ecs.update_typed_component(eid, pos)
+
+    def _handle_explore(self, eid: int, action: ExploreAction, simulation_time: int):
+        import random
+
+        from tigen.config import get_global_config
+
+        pos = self.ecs.get_typed_component(eid, PositionComponent)
+        if not pos:
+            brain = self.ecs.get_typed_component(eid, BrainComponent)
+            cast(list[ActionStep], brain.current_plan).pop(0)
+            self.ecs.update_typed_component(eid, brain)
+            return
+
+        config = get_global_config()
+        dx = random.randint(-1, 1)
+        dy = random.randint(-1, 1)
+        pos.x = max(0, min(config.world_width - 1, pos.x + dx))
+        pos.y = max(0, min(config.world_height - 1, pos.y + dy))
+        self.ecs.update_typed_component(eid, pos)
+
+        # Pop after one step of exploration
         brain = self.ecs.get_typed_component(eid, BrainComponent)
         cast(list[ActionStep], brain.current_plan).pop(0)
         self.ecs.update_typed_component(eid, brain)
-        # TODO: implement this when I implement a coordinate system
-        # pos = self.ecs.get_typed_component(eid, PositionComponent)
-        # tx, ty = params["position"]
-        # # one‑unit move toward target
-        # dx = (tx > pos.x) - (tx < pos.x)
-        # dy = (ty > pos.y) - (ty < pos.y)
-        # pos.x += dx
-        # pos.y += dy
-        # self.ecs.update_typed_component(eid, pos)
-
-        # update the ActivityComponent in‑place
-        # act = self.ecs.get_typed_component(eid, ActivityComponent)
-        # act.activity = "moving"
-        # act.metadata = {"next": (pos.x + dx, pos.y + dy)}
-        # self.ecs.update_typed_component(eid, act)
 
     def _handle_eat(self, eid: int, action: EatAction, simulation_time: int):
         # Update the ActivityComponent
@@ -109,3 +146,13 @@ class ActuationSystem(System):
             cast(list[ActionStep], brain.current_plan).pop(0)
             self.ecs.update_typed_component(eid, brain)
         self.ecs.update_typed_component(eid, act)
+
+    def _handle_pick_up(self, eid: int, action: PickUpAction, simulation_time: int):
+        brain = self.ecs.get_typed_component(eid, BrainComponent)
+        cast(list[ActionStep], brain.current_plan).pop(0)
+        self.ecs.update_typed_component(eid, brain)
+
+    def _handle_drop(self, eid: int, action: DropAction, simulation_time: int):
+        brain = self.ecs.get_typed_component(eid, BrainComponent)
+        cast(list[ActionStep], brain.current_plan).pop(0)
+        self.ecs.update_typed_component(eid, brain)
