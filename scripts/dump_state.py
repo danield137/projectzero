@@ -21,6 +21,7 @@ from zero.simulation.components import (
     HungerComponent,
     LifeExpectancyComponent,
     NameComponent,
+    PositionComponent,
     ReproductiveComponent,
     WellbeingComponent,
 )
@@ -34,6 +35,10 @@ def dump_entity(ecs: ECS, eid: int, etype: str) -> dict:
     name = ecs.get_typed_component(eid, NameComponent)
     if name:
         data["name"] = name.value
+
+    pos = ecs.get_typed_component(eid, PositionComponent)
+    if pos:
+        data["pos"] = [pos.x, pos.y]
 
     hunger = ecs.get_typed_component(eid, HungerComponent)
     if hunger:
