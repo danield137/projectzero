@@ -416,7 +416,16 @@ class SensesComponent(ClassComponent): ...
 
 
 @dataclass(slots=True)
-class PerceptionComponent(ClassComponent): ...
+class PerceivedEntity:
+    eid: int
+    etype: str
+    distance: int
+
+
+@dataclass(slots=True)
+class PerceptionComponent(ClassComponent):
+    radius: int = 8
+    nearby: list[PerceivedEntity] = field(default_factory=list)
 
 
 @dataclass(slots=True)

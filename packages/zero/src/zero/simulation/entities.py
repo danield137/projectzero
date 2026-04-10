@@ -28,6 +28,7 @@ from zero.simulation.components import (
     LocalTimeComponent,
     MemoryComponent,
     NameComponent,
+    PerceptionComponent,
     PhotosynthesisComponent,
     PositionComponent,
     PregnancyComponent,
@@ -225,6 +226,7 @@ class EntitiesFactory:
             ),
             BrainComponent(BrainType.ANIMAL, PrimitiveGoal.IDLE, None),
             MemoryComponent(MemoryData()),
+            PerceptionComponent(),
             ActivityComponent.default(),
             # Food chain components
             EdibleComponent(nutrition=10.0, food_type=FoodType.MEAT),  # Animals provide more nutrition as meat
@@ -274,6 +276,7 @@ class EntitiesFactory:
             ReproductiveComponent(gender, 1, _ENTITY_CONFIG[EntityTypes.HUMAN][ReproductiveComponent]["fertility_age"]),
             BrainComponent(BrainType.ANIMAL, PrimitiveGoal.IDLE, None),  # Using ANIMAL brain type for now
             MemoryComponent(MemoryData()),
+            PerceptionComponent(),
             ActivityComponent.default(),
             # Food chain components
             EdibleComponent(
