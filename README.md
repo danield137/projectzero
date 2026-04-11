@@ -1,5 +1,7 @@
 # Project Zero
 
+[![PyPI](https://img.shields.io/pypi/v/tigen)](https://pypi.org/project/tigen/) [![Downloads](https://img.shields.io/pypi/dm/tigen)](https://pypi.org/project/tigen/)
+
 A learning project exploring game design, simulation architecture, and AI in games — built on an ECS (Entity Component System) architecture in Python.
 
 ## Overview
