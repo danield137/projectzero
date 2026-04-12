@@ -290,7 +290,7 @@ def print_results(cfg: BenchConfig, results: dict[str, Stats]) -> None:
 
 
 # ── Preset scales ───────────────────────────────────────────────────
-SCALES = [100, 1_000, 10_000, 100_000]
+SCALES = [100, 1_000, 10_000, 100_000, 1_000_000]
 
 
 def run_all_scales(ticks: int = 100) -> None:
