@@ -50,6 +50,7 @@ class ECS:
         focus_on_entity_type: str | None = None,
     ):
         self.next_entity_id = 0
+        self._free_ids: list[int] = []
         self.entities_by_id = GenerationalDict()
         self.entities_by_type = defaultdict(GenerationalDict)
         self.components_by_entity = GenerationalDefaultDict(dict)
@@ -89,7 +90,11 @@ class ECS:
         :param components: the components to add to the entity
         :return: the entity id
         """
-        eid = self.next_entity_id
+        if self._free_ids:
+            eid = self._free_ids.pop()
+        else:
+            eid = self.next_entity_id
+            self.next_entity_id += 1
         # for know, we debug the first animal we create
         if self.track_entity(eid):
             logger.warning("%s entity %s", colored("Debugging", "light_yellow"), colored(eid, "light_cyan"))
@@ -98,7 +103,6 @@ class ECS:
         if components:
             for component in components:
                 self.add_typed_component(eid, component)
-        self.next_entity_id += 1
         if self.verbosity == Verbosity.DEBUG:
             # components_str = ", ".join([str(comp) for comp in components] if components else [])
             logger.debug(
@@ -154,6 +158,7 @@ class ECS:
         for comp_name in self.components_by_entity[eid]:
             self.components_by_type[comp_name].delete(eid)
         self.components_by_entity.delete(eid)
+        self._free_ids.append(eid)
 
     def add_component(self, eid: int, comp_name: str, comp_data: Component):
         self.components_by_entity[eid][comp_name] = comp_data
