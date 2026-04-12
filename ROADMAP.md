@@ -52,7 +52,11 @@ A working complex-ish simulation with:
 ### 🚧 0.35 — Simulation Stability
 - [x] System can run for a while without food running out
 - [x] Live visualization (TUI dashboard)
-- [ ] Performance bottlenecks — focus on Generational and ECS (Rust?)
+- [ ] Performance bottlenecks — focus on Generational and ECS
+  - Rewrite tigen ECS core in Rust (via PyO3) with contiguous SoA storage
+  - Python dict-of-objects → Rust Vec<T> indexed by entity ID
+  - Cache-friendly iteration for systems, zero pointer chasing
+  - Keep Python API surface identical (drop-in replacement)
 
 ### 🔲 0.4 — Basic Socializing
 - [ ] Stable simulation (solve overpopulation → plant extinction cycle)
