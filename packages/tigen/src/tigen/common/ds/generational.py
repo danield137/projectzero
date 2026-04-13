@@ -42,11 +42,15 @@ class _ImmutableIterationContext(Generic[T]):
 
     snapshot_length: int
     current_position: int = 0
-    deferred: dict[int, T] = field(default_factory=dict)
+    deferred: dict[int, T] = field(default_factory=dict[int, T])
 
 
-@dataclass(slots=True)
 class GenerationalContainer(Generic[T]):
+    __slots__ = ("_items", "_generations", "_free_indices", "_immutable_contexts")
+    _items: list[T | None]
+    _generations: list[int]
+    _free_indices: set[int]
+    _immutable_contexts: list[_ImmutableIterationContext[T]]
     """
     A generic container that stores items in a list with per-slot generation counters.
     Insertions reuse free slots (bumping the generation), and deletions mark a slot as None.
@@ -60,10 +64,11 @@ class GenerationalContainer(Generic[T]):
     then the current (old) value is recorded in that context’s deferred buffer.
     """
 
-    _items: list[T | None] = field(default_factory=list)
-    _generations: list[int] = field(default_factory=list)
-    _free_indices: list[int] = field(default_factory=list)
-    _immutable_contexts: list[_ImmutableIterationContext[T]] = field(default_factory=list)
+    def __init__(self) -> None:
+        self._items: list[T | None] = []
+        self._generations: list[int] = []
+        self._free_indices: set[int] = set()
+        self._immutable_contexts: list[_ImmutableIterationContext[T]] = []
 
     def insert(self, item: T) -> Handle:
         if self._free_indices:
@@ -90,13 +95,108 @@ class GenerationalContainer(Generic[T]):
                 if self._items[idx] is not None and idx not in ctx.deferred:
                     ctx.deferred[idx] = cast(T, self._items[idx])
         self._items[idx] = None
-        self._free_indices.append(idx)
+        self._free_indices.add(idx)
 
     def get(self, handle: Handle) -> T | None:
         idx, gen = handle
         if idx >= len(self._items) or self._generations[idx] != gen:
             return None
         return self._items[idx]
+
+    def try_insert_at(self, index: int, item: T) -> Handle | None:
+        """Insert item at a specific index. Returns Handle or None if slot is occupied."""
+        if index >= len(self._items):
+            old_len = len(self._items)
+            extension = index - old_len + 1
+            self._items.extend([None] * extension)
+            self._generations.extend([0] * extension)
+            self._free_indices.update(range(old_len, index + 1))
+        if self._items[index] is not None:
+            return None
+        self._items[index] = item
+        self._free_indices.discard(index)
+        return (index, self._generations[index])
+
+
+    def remove_at(self, index: int) -> None:
+        """Remove item at a specific index."""
+        if index >= len(self._items) or self._items[index] is None:
+            raise ValueError("Nothing at this index")
+        for ctx in self._immutable_contexts:
+            if ctx.current_position < index < ctx.snapshot_length:
+                if self._items[index] is not None and index not in ctx.deferred:
+                    ctx.deferred[index] = cast(T, self._items[index])
+        self._items[index] = None
+        self._free_indices.add(index)
+
+    def get_at(self, index: int) -> T | None:
+        """Get item at a specific index."""
+        if index >= len(self._items):
+            return None
+        return self._items[index]
+
+    def __getitem__(self, index: int) -> T:
+        item = self.get_at(index)
+        if item is None:
+            raise KeyError(index)
+        return item
+
+    def __contains__(self, index: object) -> bool:
+        if not isinstance(index, int):
+            return False
+        return 0 <= index < len(self._items) and self._items[index] is not None
+
+    def storage_stats(self) -> tuple[int, int]:
+        return len(self._items), len(self._free_indices)
+
+    def smart_enumerate(
+        self,
+        allowed_mutation: IsolationLevel = IsolationLevel.NONE,
+        skip_empty: bool = True,
+    ) -> Iterator[tuple[int, T]]:
+        """Like smart_iter but yields (index, value) pairs."""
+        if allowed_mutation == IsolationLevel.NONE:
+            for i, item in enumerate(self._items):
+                if skip_empty and item is None:
+                    continue
+                yield (i, cast(T, item))
+        elif allowed_mutation == IsolationLevel.ALLOW_DELETIONS:
+            snapshot_length = len(self._items)
+            frozen_free = {i for i, item in enumerate(self._items) if item is None}
+            for i in range(snapshot_length):
+                if i in frozen_free:
+                    continue
+                item = self._items[i]
+                if skip_empty and item is None:
+                    continue
+                yield (i, cast(T, item))
+        elif allowed_mutation == IsolationLevel.FULL:
+            snapshot_length = len(self._items)
+            local_ctx = _ImmutableIterationContext[T](snapshot_length)
+            self._immutable_contexts.append(local_ctx)
+            try:
+                for i in range(snapshot_length):
+                    local_ctx.current_position = i
+                    item = self._items[i]
+                    if item is None and i in local_ctx.deferred:
+                        item = local_ctx.deferred[i]
+                    if skip_empty and item is None:
+                        continue
+                    yield (i, cast(T, item))
+            finally:
+                if local_ctx in self._immutable_contexts:
+                    self._immutable_contexts.remove(local_ctx)
+        else:
+            raise ValueError("Unknown mutation allowance mode")
+
+    def indices(
+        self,
+        allowed_mutation: IsolationLevel = IsolationLevel.NONE,
+        skip_empty: bool = True,
+    ) -> Iterator[int]:
+        """Yields occupied indices."""
+        for idx, _ in self.smart_enumerate(allowed_mutation, skip_empty):
+            yield idx
 
     def smart_iter(
         self,
@@ -183,12 +283,10 @@ class GenerationalDict(Generic[K, V]):
 
     def __getitem__(self, key: K) -> V:
         try:
-            idx, gen = self._key_to_handle[key]  # O(1) hash-lookup
-            if self._container._generations[idx] == gen:  # generation still valid
-                entry = self._container._items[idx]
-                if entry is not None:  # slot not deleted
-                    return entry.value  # ➊ no extra calls
-        except (KeyError, IndexError):
+            entry = self._container.get(self._key_to_handle[key])
+            if entry is not None:
+                return entry.value
+        except KeyError:
             pass  # fall through to slow path
         # slow path keeps old invariants
         raise KeyError(key)
@@ -243,6 +341,9 @@ class GenerationalDict(Generic[K, V]):
 
     def __contains__(self, key: K) -> bool:
         return key in self._key_to_handle
+
+    def storage_stats(self) -> tuple[int, int]:
+        return self._container.storage_stats()
 
 
 class GenerationalDefaultDict(GenerationalDict[K, V]):

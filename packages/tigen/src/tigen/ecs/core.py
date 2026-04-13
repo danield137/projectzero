@@ -12,7 +12,7 @@ from typing import Any, TypeVar, cast
 from termcolor import colored
 
 from tigen.common.ds.generational import (
-    GenerationalDefaultDict,
+    GenerationalContainer,
     GenerationalDict,
     IsolationLevel,
 )
@@ -32,12 +32,9 @@ class ECS:
     The systems (S) use this data structure to efficiently access and update the components.
     """
 
-    # TODO: we need to handle entity deletion better, currently, we are not reusing entity ids.
-    # for large enough number of entities, this will cause memory issues.
-    next_entity_id: int
-    entities_by_id: GenerationalDict[int, str]
-    entities_by_type: dict[str, GenerationalDict[int, Any]]
-    components_by_entity: GenerationalDict[int, dict[str, Component]]
+    entities_by_id: GenerationalContainer[str]
+    entities_by_type: dict[str, set[int]]
+    components_by_entity: GenerationalContainer[dict[str, Component]]
     components_by_type: dict[str, GenerationalDict[int, Component]]
     verbosity: int = Verbosity.WARNING
     tracked_entity: int | None = None
@@ -49,12 +46,10 @@ class ECS:
         verbosity: int = Verbosity.WARNING,
         focus_on_entity_type: str | None = None,
     ):
-        self.next_entity_id = 0
-        self._free_ids: list[int] = []
-        self.entities_by_id = GenerationalDict()
-        self.entities_by_type = defaultdict(GenerationalDict)
-        self.components_by_entity = GenerationalDefaultDict(dict)
-        self.components_by_type = defaultdict(GenerationalDict)
+        self.entities_by_id: GenerationalContainer[str] = GenerationalContainer()
+        self.entities_by_type: dict[str, set[int]] = defaultdict(set)
+        self.components_by_entity: GenerationalContainer[dict[str, Component]] = GenerationalContainer()
+        self.components_by_type: dict[str, GenerationalDict[int, Component]] = defaultdict(GenerationalDict)
         self.focus_on_entity_type = focus_on_entity_type
         self.verbosity = verbosity
 
@@ -64,7 +59,7 @@ class ECS:
         :param eid: the entity id
         :return: True if the entity exists, False otherwise
         """
-        return eid in self.entities_by_id
+        return self.entities_by_id.get_at(eid) is not None
 
     def track_entity(self, eid: int) -> bool:
         if self.focus_on_entity_type is None:
@@ -72,7 +67,7 @@ class ECS:
         if self.tracked_entity == eid:
             return True
         if self.tracked_entity is None:
-            etype = self.entities_by_id.get(eid)
+            etype = self.entities_by_id.get_at(eid)
             if etype == self.focus_on_entity_type:
                 self.tracked_entity = eid
                 return True
@@ -90,16 +85,14 @@ class ECS:
         :param components: the components to add to the entity
         :return: the entity id
         """
-        if self._free_ids:
-            eid = self._free_ids.pop()
-        else:
-            eid = self.next_entity_id
-            self.next_entity_id += 1
+        handle = self.entities_by_id.insert(etype)
+        eid = handle[0]
         # for know, we debug the first animal we create
         if self.track_entity(eid):
             logger.warning("%s entity %s", colored("Debugging", "light_yellow"), colored(eid, "light_cyan"))
-        self.entities_by_id[eid] = etype
-        self.entities_by_type[etype][eid] = None
+        self.entities_by_type[etype].add(eid)
+        result = self.components_by_entity.try_insert_at(eid, {})
+        assert result is not None, f"Failed to insert entity {eid} into components_by_entity"
         if components:
             for component in components:
                 self.add_typed_component(eid, component)
@@ -153,19 +146,25 @@ class ECS:
                 colored(eid, "light_cyan"),
                 colored(etype, "light_magenta"),
             )
-        self.entities_by_id.delete(eid)
-        self.entities_by_type[etype].delete(eid)
-        for comp_name in self.components_by_entity[eid]:
-            self.components_by_type[comp_name].delete(eid)
-        self.components_by_entity.delete(eid)
-        self._free_ids.append(eid)
+        self.entities_by_id.remove_at(eid)
+        self.entities_by_type[etype].discard(eid)
+        entity_components = self.components_by_entity.get_at(eid)
+        if entity_components:
+            for comp_name in entity_components:
+                self.components_by_type[comp_name].delete(eid)
+        self.components_by_entity.remove_at(eid)
 
     def add_component(self, eid: int, comp_name: str, comp_data: Component):
-        self.components_by_entity[eid][comp_name] = comp_data
+        entity_components = self.components_by_entity.get_at(eid)
+        assert entity_components is not None
+        entity_components[comp_name] = comp_data
         self.components_by_type[comp_name][eid] = comp_data
 
     def get_component(self, eid: int, comp_name: str) -> Component | None:
-        return self.components_by_entity[eid].get(comp_name)
+        entity_components = self.components_by_entity.get_at(eid)
+        if entity_components is None:
+            return None
+        return entity_components.get(comp_name)
 
     def has_component(self, eid: int, comp_name: str) -> bool:
         """
@@ -174,7 +173,10 @@ class ECS:
         :param comp_name: the component name
         :return: True if the entity has the component, False otherwise
         """
-        return comp_name in self.components_by_entity[eid]
+        entity_components = self.components_by_entity.get_at(eid)
+        if entity_components is None:
+            return False
+        return comp_name in entity_components
 
     def get_entities_with_component_type(self, component_type: str, etype: str | None = None) -> Iterator[int]:
         """
@@ -219,7 +221,9 @@ class ECS:
                 colored(comp_name, "green"),
                 comp_data,
             )
-        prev = self.components_by_entity[eid].get(comp_name)
+        entity_components = self.components_by_entity.get_at(eid)
+        assert entity_components is not None
+        prev = entity_components.get(comp_name)
         if equals(prev, comp_data):
             return
         if debug and self.verbosity == Verbosity.DEBUG:
@@ -230,7 +234,7 @@ class ECS:
                 colored(eid, "light_cyan"),
                 json.dumps(comp_data),
             )
-        self.components_by_entity[eid][comp_name] = comp_data
+        entity_components[comp_name] = comp_data
         self.components_by_type[comp_name][eid] = comp_data
 
     def get_entity_components(self, eid: int) -> dict[str, Any]:

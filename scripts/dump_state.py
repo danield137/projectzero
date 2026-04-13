@@ -96,8 +96,7 @@ def dump_tick(sim: Simulation, tick: int) -> dict:
     counts: dict[str, int] = defaultdict(int)
     entities: list[dict] = []
 
-    for eid in ecs.entities_by_id:
-        etype = ecs.entities_by_id[eid]
+    for eid, etype in ecs.entities_by_id.smart_enumerate():
         # Skip metadata/config/world/weather singletons
         if etype in (EntityTypes.Metadata, EntityTypes.CONFIG, EntityTypes.WORLD, EntityTypes.WEATHER):
             continue
