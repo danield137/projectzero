@@ -10,7 +10,7 @@ from typing import cast
 from termcolor import colored
 
 from tigen.common import logging
-from tigen.common.ds.generational import GenerationalContainer
+from tigen.common.ds.generational import Container
 from tigen.common.formatting import human_readable_bytes, human_readable_time_measurement
 from tigen.config import RunConfiguration, set_global_config
 from tigen.ecs.core import ECS
@@ -160,7 +160,7 @@ class Simulation:
         max_fragmentation = 0.0
 
         # Check all generational containers in the ECS
-        containers_to_check: list[GenerationalContainer] = []
+        containers_to_check: list[Container] = []
         containers_to_check.append(self.ecs.entities_by_id)
 
         # Add all component type containers
@@ -170,8 +170,9 @@ class Simulation:
         containers_to_check.append(self.ecs.components_by_entity)
 
         for container in containers_to_check:
-            total_slots, holes = container.storage_stats()
-            used = total_slots - holes
+            total_slots = container.capacity()
+            holes = container.free_slots()
+            used = container.used_slots()
 
             total_used += used
             total_holes += holes

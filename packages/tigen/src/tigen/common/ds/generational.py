@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import (
     Generic,
+    Protocol,
     TypeVar,
     cast,
 )
@@ -44,8 +45,17 @@ class _ImmutableIterationContext(Generic[T]):
     current_position: int = 0
     deferred: dict[int, T] = field(default_factory=dict[int, T])
 
+class Container(Protocol):
+    def free_slots(self) -> int:
+        ...
 
-class GenerationalContainer(Generic[T]):
+    def capacity(self) -> int:
+        ...
+
+    def used_slots(self) -> int:
+        return self.capacity() - self.free_slots()
+
+class GenerationalContainer(Generic[T], Container):
     __slots__ = ("_items", "_generations", "_free_indices", "_immutable_contexts")
     _items: list[T | None]
     _generations: list[int]
@@ -69,6 +79,12 @@ class GenerationalContainer(Generic[T]):
         self._generations: list[int] = []
         self._free_indices: set[int] = set()
         self._immutable_contexts: list[_ImmutableIterationContext[T]] = []
+
+    def free_slots(self) -> int:
+        return len(self._free_indices)
+
+    def capacity(self) -> int:
+        return len(self._items)
 
     def insert(self, item: T) -> Handle:
         if self._free_indices:
@@ -145,9 +161,6 @@ class GenerationalContainer(Generic[T]):
         if not isinstance(index, int):
             return False
         return 0 <= index < len(self._items) and self._items[index] is not None
-
-    def storage_stats(self) -> tuple[int, int]:
-        return len(self._items), len(self._free_indices)
 
     def smart_enumerate(
         self,
@@ -256,7 +269,7 @@ class Entry(Generic[K, V]):
     value: V
 
 
-class GenerationalDict(Generic[K, V]):
+class GenerationalDict(Generic[K, V], Container):
     __slots__ = ("_container", "_key_to_handle")
     _container: GenerationalContainer[Entry[K, V]]
     _key_to_handle: dict[K, Handle]
@@ -342,8 +355,12 @@ class GenerationalDict(Generic[K, V]):
     def __contains__(self, key: K) -> bool:
         return key in self._key_to_handle
 
-    def storage_stats(self) -> tuple[int, int]:
-        return self._container.storage_stats()
+    def free_slots(self) -> int:
+        return self._container.free_slots()
+
+    def capacity(self) -> int:
+        return self._container.capacity()
+
 
 
 class GenerationalDefaultDict(GenerationalDict[K, V]):
