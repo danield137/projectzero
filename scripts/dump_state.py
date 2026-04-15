@@ -11,7 +11,8 @@ from pathlib import Path
 
 from tigen.config import RunConfiguration, set_global_config
 from tigen.ecs.core import ECS
-from zero import Simulation
+from tigen.app import App
+from zero import create_app
 from zero.simulation.components import (
     ActivityComponent,
     BrainComponent,
@@ -90,15 +91,15 @@ def dump_entity(ecs: ECS, eid: int, etype: str) -> dict:
     return data
 
 
-def dump_tick(sim: Simulation, tick: int) -> dict:
+def dump_tick(app: App, tick: int) -> dict:
     """Capture full simulation state at one tick."""
-    ecs = sim.ecs
+    ecs = app.ecs
     counts: dict[str, int] = defaultdict(int)
     entities: list[dict] = []
 
     for eid, etype in ecs.entities_by_id.smart_enumerate():
         # Skip metadata/config/world/weather singletons
-        if etype in (EntityTypes.Metadata, EntityTypes.CONFIG, EntityTypes.WORLD, EntityTypes.WEATHER):
+        if etype in (EntityTypes.Metadata, EntityTypes.CONFIG, EntityTypes.PLANET, EntityTypes.WEATHER):
             continue
         counts[etype] += 1
         entities.append(dump_entity(ecs, eid, etype))
@@ -147,25 +148,24 @@ def main():
 
     output = Path(args.output)
     config = RunConfiguration()
-    sim = Simulation(config)
-    sim.setup_simulation()
-    sim.set_starting_conditions()
+    app = create_app(config)
+    app.setup()
 
     with output.open("w") as f:
         for tick in range(args.ticks):
-            sim.simulation_time = tick
+            app.simulation_time = tick
 
             # Run all systems
-            for system in sim.system_instances.values():
+            for system in app.system_instances.values():
                 system.update(tick)
 
-            state = dump_tick(sim, tick)
+            state = dump_tick(app, tick)
             if args.summary_only:
                 f.write(json.dumps(state["summary"]) + "\n")
             else:
                 f.write(json.dumps(state) + "\n")
 
-            sim.simulation_time += 1
+            app.simulation_time += 1
 
     counts = state["summary"]["counts"]
     print(f"Wrote {args.ticks} ticks to {output}")

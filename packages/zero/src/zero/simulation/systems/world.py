@@ -1,4 +1,5 @@
 from tigen.ecs.system import System
+
 from zero.simulation.components import (
     DayNightCycleComponent,
     LocalTimeComponent,
@@ -6,8 +7,8 @@ from zero.simulation.components import (
 )
 
 
-class WorldsSystem(System):
-    """Responsible for world specific data, like day/night cycle, time, etc."""
+class PlanetSystem(System):
+    """Responsible for planet specific data, like day/night cycle, time, etc."""
 
     def advance_time(self, simulation_time: int):
         world_entities = self.ecs.get_entities_with_typed_component(LocalTimeComponent)

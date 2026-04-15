@@ -1,9 +1,9 @@
 from typing import cast
 
 import numpy as np
-
 from tigen.common import logging
 from tigen.ecs.system import System
+
 from zero.simulation.components import (
     GrowthComponent,
     Resettable,

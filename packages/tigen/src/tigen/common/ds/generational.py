@@ -55,7 +55,7 @@ class Container(Protocol):
     def used_slots(self) -> int:
         return self.capacity() - self.free_slots()
 
-class GenerationalContainer(Generic[T], Container):
+class GenerationalContainer(Container, Generic[T]):
     __slots__ = ("_items", "_generations", "_free_indices", "_immutable_contexts")
     _items: list[T | None]
     _generations: list[int]
@@ -269,7 +269,7 @@ class Entry(Generic[K, V]):
     value: V
 
 
-class GenerationalDict(Generic[K, V], Container):
+class GenerationalDict(Container, Generic[K, V]):
     __slots__ = ("_container", "_key_to_handle")
     _container: GenerationalContainer[Entry[K, V]]
     _key_to_handle: dict[K, Handle]

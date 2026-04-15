@@ -2,6 +2,7 @@ from typing import cast, get_args
 
 from tigen.ai import ActionStep
 from tigen.ecs.system import System
+
 from zero.ai.actions import (
     ActionSteps,
     EatAction,

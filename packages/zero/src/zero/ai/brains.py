@@ -1,5 +1,6 @@
 from tigen.ai.brain import Brain
 from tigen.ai.memory import Memory, PerfectMemory
+
 from zero.ai.primitive import (
     PrimitiveGoal,
     PrimitiveGoalSelector,

@@ -23,3 +23,9 @@ class System(abc.ABC):
         This is called once after the system is initialized and before the simulation starts.
         """
         return True
+
+    def cleanup(self) -> None:  # noqa: B027
+        """
+        [Optional]: Clean up the system.
+        Called after the simulation loop ends.
+        """

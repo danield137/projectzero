@@ -6,6 +6,7 @@ from tigen.ai.brain import GoalSelector, Planner
 from tigen.ai.context import BrainContext
 from tigen.ai.memory import MemoryFact, MemQuery
 from tigen.common.logging import get_logger
+
 from zero.ai.actions import (
     EatAction,
     ExploreAction,

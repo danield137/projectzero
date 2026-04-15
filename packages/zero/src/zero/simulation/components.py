@@ -20,6 +20,7 @@ from tigen.ecs.component import (
     StringComponent,
     ZeroToTenFloatComponent,
 )
+
 from zero.ai.actions import ActionStep
 from zero.ai.primitive import PrimitiveGoal
 

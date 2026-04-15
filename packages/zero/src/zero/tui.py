@@ -1,8 +1,3 @@
-"""
-TUI (Text User Interface) dashboard for the simulation.
-Displays a clean, non-scrolling dashboard with performance and world stats.
-"""
-
 from __future__ import annotations
 
 import contextlib
@@ -17,7 +12,7 @@ import numpy as np
 from zero.simulation.components import SummarizedStatsComponent
 
 if TYPE_CHECKING:
-    from zero import Simulation
+    from tigen.app import App
 
 
 @dataclass
@@ -73,7 +68,7 @@ class WorldStats:
 class TUIDisplay:
     """A curses-based TUI dashboard for the simulation."""
 
-    def __init__(self, sim: Simulation, update_interval: int = 100):
+    def __init__(self, sim: App, update_interval: int = 100):
         self.sim = sim
         self.update_interval = update_interval
         self.stdscr: curses.window | None = None
@@ -468,7 +463,6 @@ class TUIDisplay:
             diff = births - deaths
             diff_str = f"+{diff}" if diff >= 0 else str(diff)
             diff_color = curses.color_pair(1) if diff > 0 else (curses.color_pair(2) if diff < 0 else 0)
-            line = f"{label:10} {count:>6}  {diff_str:>5}  {births:>5}  {deaths:>5}"
             # Render with color on the Net column
             prefix = f"{label:10} {count:>6}  "
             self._safe_addstr(row, col + 2, prefix, 0, max_col)
@@ -605,7 +599,7 @@ class TUIDisplay:
 
 
 def run_with_tui(
-    sim: Simulation,
+    sim: App,
     max_ticks: int | None = None,
     debug_mode: bool = True,
     update_interval: int = 100,
@@ -614,7 +608,7 @@ def run_with_tui(
     """Run the simulation with TUI display.
 
     Args:
-        sim: The simulation instance
+        sim: The App instance
         max_ticks: Maximum number of ticks to run (None for unlimited)
         debug_mode: Whether to enable debug mode (memory tracking)
         update_interval: How often to update the TUI display (in ticks)
@@ -625,6 +619,7 @@ def run_with_tui(
     from collections import defaultdict
 
     from tigen.common import logging
+
     from zero.simulation.components import SummarizedStatsComponent
 
     tui = TUIDisplay(sim, update_interval=update_interval)
@@ -641,8 +636,7 @@ def run_with_tui(
             tracemalloc.start()
 
         logging.sim_time_var.set(-1)
-        sim.setup_simulation()
-        sim.set_starting_conditions()
+        sim.setup()
 
         # Disable console logging for stats in TUI mode
         try:
@@ -656,9 +650,6 @@ def run_with_tui(
         has_limit = max_ticks is not None and max_ticks > 0
 
         while tui.is_running and (not has_limit or sim.simulation_time < (max_ticks or 0)):
-            tick_start = time.time()
-            logging.sim_time_var.set(sim.simulation_time)
-
             # Update stats every interval
             if sim.simulation_time % update_interval == 0 and sim.simulation_time != 0:
                 if debug_mode:
@@ -694,17 +685,13 @@ def run_with_tui(
 
                 update_duration = defaultdict(list)
 
-            # Run systems
-            for system in sim.system_instances.values():
-                update_start = time.time()
-                system.update(sim.simulation_time)
-                update_duration[type(system).__name__].append(time.time() - update_start)
+            # Run one tick (updates all systems, increments simulation_time)
+            durations = sim.tick()
+            for name, d in durations.items():
+                update_duration[name].append(d)
 
             # Render TUI
             tui.render()
-
-            sim.simulation_time += 1
-            update_duration["total"].append(time.time() - tick_start)
 
             # Sleep after recording perf metrics so delay doesn't affect timing
             if delay > 0:

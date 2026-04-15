@@ -9,6 +9,7 @@ from tigen.common import logging
 from tigen.common.math import sigmoid_probability
 from tigen.ecs.core import ECS
 from tigen.ecs.system import System
+
 from zero.simulation.components import (
     CauseOfDeath,
     EntitiesConfigComponent,

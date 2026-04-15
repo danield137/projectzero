@@ -11,6 +11,7 @@ from tigen.common.enum import MonotonicEnum
 from tigen.config import get_global_config
 from tigen.ecs.core import ECS
 from tigen.ecs.system import System
+
 from zero.ai.brains import get_memory_engine
 from zero.simulation.components import (
     ActivityComponent,

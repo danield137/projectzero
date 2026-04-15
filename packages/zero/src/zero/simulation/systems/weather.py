@@ -1,6 +1,7 @@
 import random
 
 from tigen.ecs.system import System
+
 from zero.simulation.components import (
     EntitiesConfigComponent,
     StatsComponent,

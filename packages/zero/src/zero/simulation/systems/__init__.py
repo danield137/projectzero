@@ -13,7 +13,7 @@ from .reproduction import ReproductionSystem
 from .stats import StatsSystem
 from .water import WaterSystem
 from .weather import WeatherSystem
-from .world import WorldsSystem
+from .world import PlanetSystem
 
 __all__ = [
     "System",
@@ -25,7 +25,7 @@ __all__ = [
     "WeatherSystem",
     "WaterSystem",
     "GrowthSystem",
-    "WorldsSystem",
+    "PlanetSystem",
     "PerceptionSystem",
     "InstinctSystem",
     "ReasoningSystem",

@@ -1,6 +1,6 @@
 import argparse
 
-from zero import Simulation
+from zero import create_app
 from tigen.config import RunConfiguration
 
 
@@ -30,19 +30,19 @@ def main():
     args = parser.parse_args()
 
     config = RunConfiguration(debug_entity_id=args.debug)
-    sim = Simulation(config)
+    app = create_app(config)
 
     if not args.no_tui:
         from zero.tui import run_with_tui
         run_with_tui(
-            sim,
+            app,
             max_ticks=args.ticks,
             debug_mode=not args.release,
             update_interval=args.tui_interval,
             delay=args.tui_delay
         )
     else:
-        sim.run(max_ticks=args.ticks, debug_mode=not args.release)
+        app.run(max_ticks=args.ticks, debug_mode=not args.release)
 
 
 if __name__ == "__main__":

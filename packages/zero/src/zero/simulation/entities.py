@@ -6,6 +6,7 @@ from tigen.ai.memory import MemoryData
 from tigen.common import math
 from tigen.common.extensions import deep_freeze
 from tigen.ecs.component import Component
+
 from zero.simulation.components import (
     ASSIGNABLE_GENDERS,
     ActivityComponent,
@@ -40,7 +41,7 @@ from zero.simulation.components import (
 
 
 class EntityTypes:
-    WORLD = "World"
+    PLANET = "Planet"
     WEATHER = "Weather"
     PLANT = "Plant"
     ANIMAL = "Animal"
@@ -148,8 +149,8 @@ class EntitiesFactory:
         ]
 
     @staticmethod
-    def create_world(name: str | None = None) -> tuple[str, Sequence[Component]]:
-        return EntityTypes.WORLD, [
+    def create_planet(name: str | None = None) -> tuple[str, Sequence[Component]]:
+        return EntityTypes.PLANET, [
             NameComponent(name or "World"),
             LocalTimeComponent(hour=0, day=0, year=0, hours_in_a_day=24, days_in_a_year=65),
             DayNightCycleComponent(is_day=True, sunrise=6, sunset=18),

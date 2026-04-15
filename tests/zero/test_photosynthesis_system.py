@@ -20,7 +20,7 @@ def test_photosynthesis_during_day(ecs: ECS) -> None:
     plant_id = ecs.create_entity(*EntitiesFactory.create_plant("Test_Plant"))
 
     # Ensure it's daytime
-    world_id = ecs.create_entity(*EntitiesFactory.create_world("Test_World"))
+    world_id = ecs.create_entity(*EntitiesFactory.create_planet("Test_World"))
     day_night = ecs.get_typed_component(world_id, DayNightCycleComponent)
     day_night.is_day = True
     ecs.update_typed_component(world_id, day_night)
@@ -50,7 +50,7 @@ def test_no_photosynthesis_at_night(ecs: ECS) -> None:
     plant_id = ecs.create_entity(*EntitiesFactory.create_plant("Test_Plant"))
 
     # Set to night time
-    world_id = ecs.create_entity(*EntitiesFactory.create_world("Test_World"))
+    world_id = ecs.create_entity(*EntitiesFactory.create_planet("Test_World"))
     day_night = ecs.get_typed_component(world_id, DayNightCycleComponent)
     day_night.is_day = False
     ecs.update_typed_component(world_id, day_night)
@@ -80,7 +80,7 @@ def test_weather_affects_photosynthesis(ecs: ECS) -> None:
     plant2_id = ecs.create_entity(*EntitiesFactory.create_plant("Plant_Bad_Weather"))
 
     # Ensure it's daytime
-    world_id = ecs.create_entity(*EntitiesFactory.create_world("Test_World"))
+    world_id = ecs.create_entity(*EntitiesFactory.create_planet("Test_World"))
     day_night = ecs.get_typed_component(world_id, DayNightCycleComponent)
     day_night.is_day = True
     ecs.update_typed_component(world_id, day_night)
@@ -125,7 +125,7 @@ def test_animals_dont_photosynthesize(ecs: ECS) -> None:
     animal_id = ecs.create_entity(*EntitiesFactory.create_animal("Test_Animal"))
 
     # Ensure it's daytime
-    world_id = ecs.create_entity(*EntitiesFactory.create_world("Test_World"))
+    world_id = ecs.create_entity(*EntitiesFactory.create_planet("Test_World"))
     day_night = ecs.get_typed_component(world_id, DayNightCycleComponent)
     day_night.is_day = True
     ecs.update_typed_component(world_id, day_night)

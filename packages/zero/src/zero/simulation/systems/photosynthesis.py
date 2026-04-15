@@ -1,5 +1,6 @@
 from tigen.common import logging
 from tigen.ecs.system import System
+
 from zero.simulation.components import (
     HydrationComponent,
     PhotosynthesisComponent,

@@ -14,6 +14,7 @@ from tigen.common.logging import get_logger
 from tigen.config import get_global_config
 from tigen.ecs.core import ECS
 from tigen.ecs.system import System
+
 from zero.ai.actions import ActionStep
 from zero.ai.brains import get_predefined_brain
 from zero.ai.context import (

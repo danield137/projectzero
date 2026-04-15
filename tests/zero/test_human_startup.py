@@ -1,6 +1,6 @@
 from typing import List
 
-from zero import Simulation
+from zero import create_app
 from zero.simulation.components import NameComponent, ReproductiveComponent
 from zero.simulation.entities import EntitiesFactory, EntityTypes
 
@@ -30,23 +30,21 @@ def test_gender_balanced_spawner_distribution():
 
 def test_startup_creates_two_humans():
     """Test that simulation startup creates exactly two humans."""
-    sim = Simulation()
-    sim.setup_simulation()
-    sim.set_starting_conditions()
+    app = create_app()
+    app.setup()
 
     # Check that exactly 2 humans were created
-    human_count = len(sim.ecs.entities_by_type.get(EntityTypes.HUMAN, []))
+    human_count = len(app.ecs.entities_by_type.get(EntityTypes.HUMAN, []))
     assert human_count == 2
 
 
 def test_startup_creates_two_animals():
     """Test that simulation startup still creates exactly two animals."""
-    sim = Simulation()
-    sim.setup_simulation()
-    sim.set_starting_conditions()
+    app = create_app()
+    app.setup()
 
     # Check that exactly 20 animals were created
-    animal_count = len(sim.ecs.entities_by_type.get(EntityTypes.ANIMAL, []))
+    animal_count = len(app.ecs.entities_by_type.get(EntityTypes.ANIMAL, []))
     assert animal_count == 20
 
 

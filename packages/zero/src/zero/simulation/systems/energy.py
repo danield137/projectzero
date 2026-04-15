@@ -3,6 +3,7 @@ from typing import cast
 from tigen.common import logging
 from tigen.common.enum import MonotonicEnum
 from tigen.ecs.system import System
+
 from zero.simulation.components import (
     ActivityComponent,
     EnergyComponent,
