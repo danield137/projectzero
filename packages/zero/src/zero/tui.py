@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import contextlib
 import curses
-import os
 import time
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING
@@ -14,19 +13,7 @@ from zero.simulation.components import SummarizedStatsComponent
 if TYPE_CHECKING:
     from tigen.app import App
 
-
-@dataclass
-class PerformanceStats:
-    """Stores performance metrics for the TUI."""
-
-    tick: int = 0
-    total_time_ms: float = 0.0
-    system_times: dict[str, float] = field(default_factory=dict[str, float])
-    rss_mb: float = 0.0
-    heap_mb: float = 0.0
-    ecs_used: int = 0
-    ecs_holes: int = 0
-    ecs_fragmentation: float = 0.0
+from tigen.ecs.system import System
 
 
 @dataclass
@@ -68,13 +55,10 @@ class WorldStats:
 class TUIDisplay:
     """A curses-based TUI dashboard for the simulation."""
 
-    def __init__(self, sim: App, update_interval: int = 100):
+    def __init__(self, sim: App):
         self.sim = sim
-        self.update_interval = update_interval
         self.stdscr: curses.window | None = None
-        self.perf_stats = PerformanceStats()
         self.world_stats = WorldStats()
-        self.last_render_tick = -1
         self._running = True
         self._started = False
         # Track previous values for delta calculations
@@ -90,8 +74,6 @@ class TUIDisplay:
         self._prev_plants_consumed_sum = 0.0
         self._last_render_time: float = 0.0
         self._refresh_interval_ms: float = 0.0
-        self._ticks_since_refresh: int = 0
-        self._prev_render_tick: int = 0
 
     def start(self):
         """Initialize curses and set up the screen."""
@@ -130,34 +112,6 @@ class TUIDisplay:
         curses.echo()
         curses.endwin()
         self._started = False
-
-    def update_performance_stats(
-        self,
-        tick: int,
-        durations: dict[str, list[float]],
-        rss_mb: float = 0.0,
-        heap_mb: float = 0.0,
-        ecs_used: int = 0,
-        ecs_holes: int = 0,
-        ecs_fragmentation: float = 0.0,
-    ):
-        """Update performance statistics."""
-        self.perf_stats.tick = tick
-
-        # Calculate average times in ms
-        if "total" in durations and durations["total"]:
-            self.perf_stats.total_time_ms = (sum(durations["total"]) / len(durations["total"])) * 1000
-
-        self.perf_stats.system_times = {}
-        for name, times in durations.items():
-            if name != "total" and times:
-                self.perf_stats.system_times[name] = (sum(times) / len(times)) * 1000
-
-        self.perf_stats.rss_mb = rss_mb
-        self.perf_stats.heap_mb = heap_mb
-        self.perf_stats.ecs_used = ecs_used
-        self.perf_stats.ecs_holes = ecs_holes
-        self.perf_stats.ecs_fragmentation = ecs_fragmentation
 
     def update_world_stats(self):
         """Update world statistics from the simulation."""
@@ -273,13 +227,6 @@ class TUIDisplay:
 
         tick = self.sim.simulation_time
 
-        # Only render every update_interval ticks
-        if tick - self.last_render_tick < self.update_interval and self.last_render_tick >= 0:
-            return
-
-        self.last_render_tick = tick
-        self._ticks_since_refresh = tick - self._prev_render_tick if self._prev_render_tick > 0 else self.update_interval
-        self._prev_render_tick = tick
         now = time.time()
         if self._last_render_time > 0:
             self._refresh_interval_ms = (now - self._last_render_time) * 1000
@@ -290,39 +237,35 @@ class TUIDisplay:
             self.stdscr.clear()
             max_y, max_x = self.stdscr.getmaxyx()
 
-            # Layout columns
-            left_col = 2
-            right_col = max(max_x - 36, max_x // 2 + 2)
-            right_width = max_x - right_col - 1
-            left_width = right_col - left_col - 2
+            # Layout: 70% game data (left), 30% perf data (right)
+            perf_width = max(28, max_x * 30 // 100)
+            game_width = max_x - perf_width - 1  # 1 col for vertical separator
+            game_col = 1
+            perf_col = game_width + 2  # after separator
 
             # Title bar
-            title = "Project Zero"
-            tick_str = f"Tick: {tick:,}"
+            title = f"Project Zero  ─  Tick: {tick:,}"
             with contextlib.suppress(curses.error):
-                self.stdscr.addstr(0, left_col, title, curses.A_BOLD | curses.color_pair(4))
-                self.stdscr.addstr(0, max_x - len(tick_str) - 2, tick_str, curses.A_DIM)
+                self.stdscr.addstr(0, game_col, title, curses.A_BOLD | curses.color_pair(3))
 
-            # Right side: Performance (compact, top-right)
-            self._draw_perf_compact(2, right_col, right_width)
+            # Draw vertical separator
+            for r in range(1, max_y - 1):
+                with contextlib.suppress(curses.error):
+                    self.stdscr.addstr(r, game_width + 1, "│", curses.A_DIM)
 
-            # Right side: Weather (below perf)
-            self._draw_weather_compact(9, right_col, right_width)
-
-            # Right side: System time breakdown (below weather)
-            self._draw_systems_section(12, right_col, right_width)
-
-            # Left side: Population
+            # ── Left panel: Game data ──
             row = 2
-            row = self._draw_population_section(row, left_col, left_width)
-
-            # Left side: Vitals
+            row = self._draw_population_section(row, game_col, game_width - 1)
             row += 1
-            row = self._draw_vitals_section(row, left_col, left_width)
-
-            # Left side: Activity distribution
+            row = self._draw_vitals_section(row, game_col, game_width - 1)
             row += 1
-            row = self._draw_goals_section(row, left_col, left_width)
+            row = self._draw_goals_section(row, game_col, game_width - 1)
+            row += 1
+            self._draw_weather_compact(row, game_col, game_width - 1)
+
+            # ── Right panel: Perf data ──
+            row_r = 2
+            row_r = self._draw_perf_section(row_r, perf_col, perf_width - 1)
 
             # Footer
             if max_y - 1 > 0:
@@ -380,43 +323,61 @@ class TUIDisplay:
             self.stdscr.addstr(row, col, f"── {title} ", curses.A_BOLD | curses.color_pair(4))
             self.stdscr.addstr("─" * rule_len, curses.A_DIM | curses.color_pair(4))
 
-    def _draw_perf_compact(self, row: int, col: int, width: int):
-        """Draw compact performance metrics in top-right."""
+    def _draw_perf_section(self, start_row: int, col: int, width: int) -> int:
+        """Draw performance metrics: wall-clock, cpu-clock, per-system times."""
         if not self.stdscr:
-            return
+            return start_row
         max_y, _ = self.stdscr.getmaxyx()
 
+        row = start_row
         self._draw_section_header(row, col, "Perf", width)
-
         row += 1
-        if row < max_y:
-            total_ms = self.perf_stats.total_time_ms
-            tps = 1000 / total_ms if total_ms > 0 else 0
+
+        m = self.sim.measurements
+        meta_keys = {"wall", "cpu"}
+
+        wall_ms = m.get("wall", 0) * 1000
+        cpu_ms = m.get("cpu", 0) * 1000
+
+        if wall_ms > 0 and row < max_y:
+            tps = 1000 / wall_ms
             with contextlib.suppress(curses.error):
-                self.stdscr.addstr(row, col + 2, f"{'Tick:':<8} {total_ms:.2f}ms  ({tps:.0f} tps)", curses.A_DIM)
+                self.stdscr.addstr(row, col + 2, f"{'Wall:':<8} {wall_ms:.2f}ms  ({tps:.0f} ticks/sec)", curses.A_DIM)
+            row += 1
 
-        row += 1
-        if row < max_y:
+        if cpu_ms > 0 and row < max_y:
             with contextlib.suppress(curses.error):
-                self.stdscr.addstr(
-                    row, col + 2, f"{'Mem:':<8} RSS {self.perf_stats.rss_mb:.1f}M  Heap {self.perf_stats.heap_mb:.1f}M", curses.A_DIM
-                )
+                self.stdscr.addstr(row, col + 2, f"{'CPU:':<8} {cpu_ms:.2f}ms", curses.A_DIM)
+            row += 1
 
-        row += 1
-        if row < max_y:
-            frag_pct = self.perf_stats.ecs_fragmentation * 100
-            with contextlib.suppress(curses.error):
-                self.stdscr.addstr(
-                    row, col + 2, f"{'ECS:':<8} {self.perf_stats.ecs_used:,} slots  {frag_pct:.0f}% frag", curses.A_DIM
-                )
-
-        row += 1
         if row < max_y and self._refresh_interval_ms > 0:
             with contextlib.suppress(curses.error):
                 if self._refresh_interval_ms >= 1000:
                     self.stdscr.addstr(row, col + 2, f"{'Refresh:':<8} {self._refresh_interval_ms / 1000:.1f}s", curses.A_DIM)
                 else:
                     self.stdscr.addstr(row, col + 2, f"{'Refresh:':<8} {self._refresh_interval_ms:.0f}ms", curses.A_DIM)
+            row += 1
+
+        # Per-system breakdown
+        system_times = {k: v * 1000 for k, v in m.items() if k not in meta_keys and v > 0}
+        if system_times:
+            row += 1
+            if row < max_y:
+                self._draw_section_header(row, col, "Systems", width)
+                row += 1
+
+            total_sys_ms = sum(system_times.values())
+            sorted_systems = sorted(system_times.items(), key=lambda x: x[1], reverse=True)
+            for name, ms in sorted_systems:
+                if row >= max_y - 1:
+                    break
+                short_name = name.replace("System", "")[:9]
+                pct = (ms / total_sys_ms) * 100 if total_sys_ms > 0 else 0
+                with contextlib.suppress(curses.error):
+                    self.stdscr.addstr(row, col + 2, f"{short_name:<9} {ms:>6.2f}ms {pct:>3.0f}%", curses.A_DIM)
+                row += 1
+
+        return row
 
     def _draw_weather_compact(self, row: int, col: int, width: int):
         """Draw compact weather widget on the right side."""
@@ -547,159 +508,60 @@ class TUIDisplay:
 
         return row
 
-    def _fmt_time(self, ms: float) -> str:
-        """Format a time value compactly."""
-        if ms >= 1000:
-            return f"{ms / 1000:.1f}s"
-        if ms >= 1.0:
-            return f"{ms:.1f}ms"
-        return f"{ms * 1000:.0f}µs"
-
-    def _draw_systems_section(self, start_row: int, col: int, width: int) -> int:
-        """Draw per-system time breakdown on the right side."""
-        if not self.stdscr or not self.perf_stats.system_times:
-            return start_row
-        max_y, _ = self.stdscr.getmaxyx()
-
-        row = start_row
-        self._draw_section_header(row, col, "Systems", width)
-        row += 1
-
-        total_ms = sum(self.perf_stats.system_times.values())
-        if total_ms == 0:
-            return row
-
-        ticks = max(self._ticks_since_refresh, 1)
-
-        # Column header
-        if row < max_y:
-            self._safe_addstr(row, col + 2, f"{'':9} {'tick':>6} {'%':>4} {'total':>6}", curses.A_DIM)
-        row += 1
-
-        sorted_systems = sorted(self.perf_stats.system_times.items(), key=lambda x: x[1], reverse=True)
-        for name, ms in sorted_systems:
-            if row >= max_y - 1:
-                break
-            short_name = name.replace("System", "")[:9]
-            pct = (ms / total_ms) * 100 if total_ms > 0 else 0
-            total_time = ms * ticks
-
-            tick_str = self._fmt_time(ms)
-            total_str = self._fmt_time(total_time)
-
-            self._safe_addstr(row, col + 2, f"{short_name:<9} {tick_str:>6} {pct:>3.0f}% {total_str:>6}", curses.A_DIM)
-            row += 1
-
-        return row
-
     @property
     def is_running(self) -> bool:
         """Check if the TUI is still running (user hasn't quit)."""
         return self._running
 
 
-def run_with_tui(
-    sim: App,
-    max_ticks: int | None = None,
-    debug_mode: bool = True,
-    update_interval: int = 100,
-    delay: float = 0.0,
-):
-    """Run the simulation with TUI display.
+class TUIRenderSystem(System):
+    """Render system that drives the TUI dashboard.
 
-    Args:
-        sim: The App instance
-        max_ticks: Maximum number of ticks to run (None for unlimited)
-        debug_mode: Whether to enable debug mode (memory tracking)
-        update_interval: How often to update the TUI display (in ticks)
-        delay: Seconds to sleep between ticks (not counted in perf metrics)
+    Register with .with_render_systems([TUIRenderSystem]) and set
+    .with_refresh_rate(fps) to control how often it renders.
+    Handles curses lifecycle in startup/shutdown hooks.
     """
-    import logging as stdlib_logging
-    import tracemalloc
-    from collections import defaultdict
 
-    from tigen.common import logging
+    def __init__(self):
+        self.tui: TUIDisplay | None = None
+        self._app: App | None = None
+        self._original_log_level: int = 0
 
-    from zero.simulation.components import SummarizedStatsComponent
+    def startup(self, app: App) -> None:
+        import logging as stdlib_logging
 
-    tui = TUIDisplay(sim, update_interval=update_interval)
+        self._app = app
+        self.tui = TUIDisplay(app)
 
-    # Suppress normal logging in TUI mode
-    zero_logger = stdlib_logging.getLogger("zero")
-    original_level = zero_logger.level
-    zero_logger.setLevel(stdlib_logging.CRITICAL)
+        # Suppress normal logging in TUI mode
+        zero_logger = stdlib_logging.getLogger("zero")
+        self._original_log_level = zero_logger.level
+        zero_logger.setLevel(stdlib_logging.CRITICAL)
 
-    try:
-        tui.start()
-
-        if debug_mode:
-            tracemalloc.start()
-
-        logging.sim_time_var.set(-1)
-        sim.setup()
+        self.tui.start()
 
         # Disable console logging for stats in TUI mode
         try:
-            summarized_stats = sim.ecs.get_singleton_component(SummarizedStatsComponent)
+            summarized_stats = self.ecs.get_singleton_component(SummarizedStatsComponent)
             summarized_stats.print_to_console = False
-            sim.ecs.update_typed_singleton_component(summarized_stats)
+            self.ecs.update_typed_singleton_component(summarized_stats)
         except Exception:
             pass
 
-        update_duration: dict[str, list[float]] = defaultdict(list)
-        has_limit = max_ticks is not None and max_ticks > 0
+    def update(self, simulation_time: int) -> None:
+        assert self.tui is not None
+        assert self._app is not None
 
-        while tui.is_running and (not has_limit or sim.simulation_time < (max_ticks or 0)):
-            # Update stats every interval
-            if sim.simulation_time % update_interval == 0 and sim.simulation_time != 0:
-                if debug_mode:
-                    # Get memory stats
-                    rss_mb = 0.0
-                    heap_mb = 0.0
-                    try:
-                        import psutil
+        self.tui.render()
 
-                        proc = psutil.Process(os.getpid())
-                        rss_mb = proc.memory_info().rss / (1024 * 1024)
-                    except Exception:
-                        pass
+        if not self.tui.is_running:
+            self._app.request_stop()
 
-                    try:
-                        current, _peak = tracemalloc.get_traced_memory()
-                        heap_mb = current / (1024 * 1024)
-                    except Exception:
-                        pass
+    def shutdown(self) -> None:
+        import logging as stdlib_logging
 
-                    # Get ECS stats
-                    ecs_used, ecs_holes, ecs_frag = sim.ecs_memory_stats()
+        if self.tui:
+            self.tui.stop()
 
-                    tui.update_performance_stats(
-                        sim.simulation_time,
-                        update_duration,
-                        rss_mb=rss_mb,
-                        heap_mb=heap_mb,
-                        ecs_used=ecs_used,
-                        ecs_holes=ecs_holes,
-                        ecs_fragmentation=ecs_frag,
-                    )
-
-                update_duration = defaultdict(list)
-
-            # Run one tick (updates all systems, increments simulation_time)
-            durations = sim.tick()
-            for name, d in durations.items():
-                update_duration[name].append(d)
-
-            # Render TUI
-            tui.render()
-
-            # Sleep after recording perf metrics so delay doesn't affect timing
-            if delay > 0:
-                time.sleep(delay)
-
-    finally:
-        tui.stop()
-        # Restore logger level
-        zero_logger.setLevel(original_level)
-
-    return sim.simulation_time
+        zero_logger = stdlib_logging.getLogger("zero")
+        zero_logger.setLevel(self._original_log_level)

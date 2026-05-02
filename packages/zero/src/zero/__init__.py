@@ -128,12 +128,21 @@ def log_entity_summary(app: App, heading: str) -> None:
 def create_app(
     config: RunConfiguration | None = None,
     systems: list[type[System]] | None = None,
+    render_systems: list[type[System]] | None = None,
+    refresh_rate: float | None = None,
+    measurements: bool = False,
 ) -> App:
     """Create an App configured for the zero simulation."""
-    return (
+    builder = (
         AppBuilder()
         .with_systems(systems or ZERO_SYSTEMS)
         .with_setup(setup_zero_world)
         .with_config(config or RunConfiguration.default())
-        .build()
     )
+    if render_systems:
+        builder.with_render_systems(render_systems)
+    if refresh_rate is not None:
+        builder.with_refresh_rate(refresh_rate)
+    if measurements:
+        builder.with_measurements()
+    return builder.build()

@@ -1,7 +1,7 @@
 import argparse
 
-from zero import create_app
 from tigen.config import RunConfiguration
+from zero import create_app
 
 
 def main():
@@ -10,39 +10,33 @@ def main():
     parser.add_argument("-r", "--release", action="store_true", help="Run in release mode (disable memory tracking)")
     parser.add_argument("-d", "--debug", type=int, help="Debug a specific entity by ID")
     parser.add_argument(
-        "--no-tui",
+        "--headless",
         action="store_true",
-        help="Disable TUI dashboard, use log output instead"
+        help="Run without TUI dashboard (headless mode)"
     )
     parser.add_argument(
-        "--tui-interval",
-        type=int,
-        default=100,
-        help="TUI update interval in ticks (default: 100)"
-    )
-    parser.add_argument(
-        "--tui-delay",
+        "--refresh-rate",
         type=float,
-        default=0.0,
-        help="Delay in seconds between ticks (default: 0)"
+        default=10.0,
+        help="TUI refresh rate in FPS (default: 10)"
     )
 
     args = parser.parse_args()
 
     config = RunConfiguration(debug_entity_id=args.debug)
-    app = create_app(config)
 
-    if not args.no_tui:
-        from zero.tui import run_with_tui
-        run_with_tui(
-            app,
-            max_ticks=args.ticks,
-            debug_mode=not args.release,
-            update_interval=args.tui_interval,
-            delay=args.tui_delay
-        )
+    if args.headless:
+        app = create_app(config)
     else:
-        app.run(max_ticks=args.ticks, debug_mode=not args.release)
+        from zero.tui import TUIRenderSystem
+        app = create_app(
+            config,
+            render_systems=[TUIRenderSystem],
+            refresh_rate=args.refresh_rate,
+            measurements=True,
+        )
+
+    app.run(max_ticks=args.ticks, debug_mode=not args.release)
 
 
 if __name__ == "__main__":

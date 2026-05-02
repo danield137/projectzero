@@ -83,9 +83,8 @@ python run.py [options]
 
   -t, --ticks N         Run for N ticks (default: unlimited)
   -r, --release         Disable debug/memory tracking
-  --tui                 Use TUI dashboard mode
-  --tui-interval N      Dashboard refresh interval in ticks (default: 100)
-  --tui-delay SECS      Delay between ticks (default: 0)
+  --headless            Run without TUI dashboard
+  --refresh-rate FPS    TUI refresh rate in FPS (default: 10)
 ```
 
 ## Roadmap
