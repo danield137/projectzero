@@ -28,10 +28,13 @@ def main():
     if args.headless:
         app = create_app(config)
     else:
-        from zero.tui import TUIRenderSystem
+        import logging
+        logging.getLogger("zero").setLevel(logging.CRITICAL)
+
+        from zero.tui import ZERO_DASHBOARD
         app = create_app(
             config,
-            render_systems=[TUIRenderSystem],
+            render_systems=[ZERO_DASHBOARD.create_render_system()],
             refresh_rate=args.refresh_rate,
             measurements=True,
         )
