@@ -95,8 +95,19 @@ class Table:
     fn: Callable[[dict[str, Any]], list[list[str]]]
 
 
+@dataclass
+class TextBlock:
+    """Custom text widget. fn returns pre-rendered lines for the available width.
+
+    Use for domain-specific displays (ASCII maps, event logs, card grids, etc.)
+    without exposing curses to user code.
+    """
+
+    fn: Callable[[dict[str, Any], int], list[str]]
+
+
 # Widget union type
-Widget = Metric | BarChart | Table
+Widget = Metric | BarChart | Table | TextBlock
 
 
 @dataclass
@@ -311,6 +322,8 @@ class _DashboardRenderer:
                 row = self._draw_table(widget, ctx, row, col, width)
             elif isinstance(widget, BarChart):
                 row = self._draw_barchart(widget, ctx, row, col, width)
+            elif isinstance(widget, TextBlock):
+                row = self._draw_text_block(widget, ctx, row, col, width)
 
         return row
 
@@ -379,6 +392,25 @@ class _DashboardRenderer:
                 label = bar.label[:10]
                 self._safe_addstr(row, col + 4, f"{label:>10}  [{bar_str}] {bar.ratio * 100:4.0f}%", 0, max_col)
                 row += 1
+
+        return row
+
+    def _draw_text_block(self, widget: TextBlock, ctx: dict[str, Any], row: int, col: int, width: int) -> int:
+        if not self.stdscr:
+            return row
+        max_y, _ = self.stdscr.getmaxyx()
+        max_col = col + width
+
+        try:
+            lines = widget.fn(ctx, width - 2)
+        except Exception:
+            lines = ["?"]
+
+        for line in lines:
+            if row >= max_y - 1:
+                break
+            self._safe_addstr(row, col + 2, line, 0, max_col)
+            row += 1
 
         return row
 

@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
-from tigen.tui import Bar, BarChart, BarGroup, Metric, Panel, Table, TUIDashboard
+from tigen.tui import Bar, BarChart, BarGroup, Metric, Panel, Table, TextBlock, TUIDashboard
 
 if TYPE_CHECKING:
     from tigen.ecs.core import ECS
@@ -88,28 +88,45 @@ def _extract_context(ecs: ECS) -> dict[str, Any]:
     return ctx
 
 
-def _population_rows(ctx: dict[str, Any]) -> list[list[str]]:
-    rows = []
-    for label, count_key, birth_key, death_key in [
-        ("Animal", "animals", "animal_births", "animal_deaths"),
-        ("Human", "humans", "human_births", "human_deaths"),
-    ]:
-        count = ctx.get(count_key, 0)
-        births = ctx.get(birth_key, 0)
-        deaths = ctx.get(death_key, 0)
-        net = births - deaths
-        net_str = f"+{net}" if net >= 0 else str(net)
-        rows.append([label, str(count), net_str, str(births), str(deaths)])
+def _species_card(label: str, total: int | str, born: int | str, died: int | str) -> list[str]:
+    """Render a single species info card."""
+    inner = 16
+    return [
+        "┌" + "─" * (inner + 2) + "┐",
+        "│ " + f"{label:^{inner}}" + " │",
+        "├" + "─" * (inner + 2) + "┤",
+        "│ " + f"{'Total:':<8}{str(total):>{inner - 8}}" + " │",
+        "│ " + f"{'Born:':<8}{str(born):>{inner - 8}}" + " │",
+        "│ " + f"{'Died:':<8}{str(died):>{inner - 8}}" + " │",
+        "└" + "─" * (inner + 2) + "┘",
+    ]
 
-    # Plants
-    biomass = ctx.get("plant_biomass", 0.0)
-    gen = ctx.get("plants_generated", 0.0)
-    con = ctx.get("plants_consumed", 0.0)
-    net = gen - con
-    net_str = f"+{net:.0f}" if net >= 0 else f"{net:.0f}"
-    rows.append(["Plant", f"{biomass:.0f}", net_str, f"{gen:.0f}", f"{con:.0f}"])
 
-    return rows
+def _render_population(ctx: dict[str, Any], width: int) -> list[str]:
+    """Render population cards side by side."""
+    cards = [
+        _species_card("Animal", ctx.get("animals", 0), ctx.get("animal_births", 0), ctx.get("animal_deaths", 0)),
+        _species_card("Human", ctx.get("humans", 0), ctx.get("human_births", 0), ctx.get("human_deaths", 0)),
+        _species_card(
+            "Plant",
+            f"{ctx.get('plant_biomass', 0):.0f}",
+            f"{ctx.get('plants_generated', 0):.0f}",
+            f"{ctx.get('plants_consumed', 0):.0f}",
+        ),
+    ]
+
+    card_height = len(cards[0])
+    card_width = len(cards[0][0])
+    gap = 2
+    per_row = max(1, (width + gap) // (card_width + gap))
+
+    lines: list[str] = []
+    for start in range(0, len(cards), per_row):
+        row_cards = cards[start : start + per_row]
+        for line_idx in range(card_height):
+            lines.append((" " * gap).join(card[line_idx] for card in row_cards))
+
+    return lines
 
 
 def _vitals_rows(ctx: dict[str, Any]) -> list[list[str]]:
@@ -141,10 +158,7 @@ ZERO_DASHBOARD = TUIDashboard(
     perf_details=True,
     panels=[
         Panel("Population", [
-            Table(
-                headers=["", "Count", "Net", "Born", "Died"],
-                fn=_population_rows,
-            ),
+            TextBlock(fn=_render_population),
         ]),
         Panel("Vitals (Avg)", [
             Table(
