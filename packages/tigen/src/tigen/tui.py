@@ -147,6 +147,8 @@ class TUIDashboard:
     context: Callable[[ECS], dict[str, Any]] = field(default_factory=lambda: _default_context)
     perf_panel: bool = True
     perf_details: bool = False
+    footer: str = " [q] quit "
+    on_key: Callable[[int, App], None] | None = None
 
     def create_render_system(self) -> type[System]:
         """Create a System class that renders this dashboard."""
@@ -173,6 +175,7 @@ class TUIDashboard:
                     simulation_time=self._app.simulation_time,
                     measurements=self._app.measurements,
                     ctx=ctx,
+                    app=self._app,
                 )
 
                 if not self._dashboard_renderer.is_running:
@@ -241,7 +244,7 @@ class _DashboardRenderer:
     def is_running(self) -> bool:
         return self._running
 
-    def render(self, simulation_time: int, measurements: dict[str, float], ctx: dict[str, Any]) -> None:
+    def render(self, simulation_time: int, measurements: dict[str, float], ctx: dict[str, Any], app: App) -> None:
         if not self._started or not self.stdscr:
             return
 
@@ -284,7 +287,7 @@ class _DashboardRenderer:
 
             # Footer
             if max_y - 1 > 0:
-                footer = " [q] quit "
+                footer = self.dashboard.footer
                 footer_col = max(0, (max_x - len(footer)) // 2)
                 with contextlib.suppress(curses.error):
                     self.stdscr.addstr(max_y - 1, footer_col, footer, curses.A_DIM)
@@ -296,6 +299,8 @@ class _DashboardRenderer:
                 key = self.stdscr.getch()
                 if key in (ord("q"), ord("Q")):
                     self._running = False
+                elif key != -1 and self.dashboard.on_key is not None:
+                    self.dashboard.on_key(key, app)
             except curses.error:
                 pass
 

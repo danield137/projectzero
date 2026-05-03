@@ -81,6 +81,15 @@ class App:
         """Request the simulation loop to stop after the current iteration."""
         self._stop_requested = True
 
+    @property
+    def ticks_per_second(self) -> float | None:
+        return self._ticks_per_second
+
+    def set_ticks_per_second(self, tps: float) -> None:
+        if tps <= 0:
+            raise ValueError("ticks_per_second must be positive, got %s" % tps)
+        self._ticks_per_second = tps
+
     def _should_stop(self) -> bool:
         if self._stop_requested:
             return True
@@ -220,7 +229,6 @@ class App:
     def _run_paced(self, max_ticks: int | None, debug_mode: bool) -> None:
         """Paced loop: fixed systems run at ticks_per_second, render once per frame."""
         assert self._ticks_per_second is not None
-        fixed_dt = 1.0 / self._ticks_per_second
         frame_dt = 1.0 / self._refresh_rate if self._refresh_rate else 0.0
         accumulator = 0.0
         last = time.monotonic()
@@ -238,6 +246,7 @@ class App:
                 # --- Fixed schedule: accumulator-driven ---
                 accumulator += elapsed
                 steps_this_frame = 0
+                fixed_dt = 1.0 / self._ticks_per_second
 
                 while accumulator >= fixed_dt and steps_this_frame < _MAX_FIXED_STEPS_PER_FRAME:
                     if has_limit and self.simulation_time >= cast(int, max_ticks):
