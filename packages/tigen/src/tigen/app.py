@@ -43,6 +43,7 @@ class App:
     _summary_interval: int
     _ticks_per_second: float | None
     _refresh_rate: float | None
+    _max_fixed_steps_per_frame: int
 
     def __init__(
         self,
@@ -56,6 +57,7 @@ class App:
         summary_interval: int = 10000,
         ticks_per_second: float | None = None,
         refresh_rate: float | None = None,
+        max_fixed_steps_per_frame: int = _MAX_FIXED_STEPS_PER_FRAME,
         measurements_enabled: bool = False,
     ) -> None:
         self.simulation_time = 0
@@ -75,6 +77,7 @@ class App:
         self._summary_interval = summary_interval
         self._ticks_per_second = ticks_per_second
         self._refresh_rate = refresh_rate
+        self._max_fixed_steps_per_frame = max_fixed_steps_per_frame
         set_global_config(self.config)
 
     def request_stop(self) -> None:
@@ -248,7 +251,7 @@ class App:
                 steps_this_frame = 0
                 fixed_dt = 1.0 / self._ticks_per_second
 
-                while accumulator >= fixed_dt and steps_this_frame < _MAX_FIXED_STEPS_PER_FRAME:
+                while accumulator >= fixed_dt and steps_this_frame < self._max_fixed_steps_per_frame:
                     if has_limit and self.simulation_time >= cast(int, max_ticks):
                         break
                     if self._should_stop():
@@ -425,6 +428,7 @@ class AppBuilder:
     _summary_interval: int
     _ticks_per_second: float | None
     _refresh_rate: float | None
+    _max_fixed_steps_per_frame: int
     _measurements_enabled: bool
 
     def __init__(self) -> None:
@@ -438,6 +442,7 @@ class AppBuilder:
         self._summary_interval = 10000
         self._ticks_per_second = None
         self._refresh_rate = None
+        self._max_fixed_steps_per_frame = _MAX_FIXED_STEPS_PER_FRAME
         self._measurements_enabled = False
 
     def with_systems(self, systems: list[type[System]]) -> AppBuilder:
@@ -526,6 +531,18 @@ class AppBuilder:
         self._refresh_rate = fps
         return self
 
+    def with_max_fixed_steps_per_frame(self, n: int) -> AppBuilder:
+        """Set the max fixed steps allowed in one frame.
+
+        Higher values let debug/fast-forward modes catch up at high tick rates.
+        Lower values protect interactive apps from long stalls when fixed systems
+        get expensive.
+        """
+        if n <= 0:
+            raise ValueError("max_fixed_steps_per_frame must be positive, got %s" % n)
+        self._max_fixed_steps_per_frame = n
+        return self
+
     def with_measurements(self) -> AppBuilder:
         """Enable per-system timing measurements.
 
@@ -552,5 +569,6 @@ class AppBuilder:
             summary_interval=self._summary_interval,
             ticks_per_second=self._ticks_per_second,
             refresh_rate=self._refresh_rate,
+            max_fixed_steps_per_frame=self._max_fixed_steps_per_frame,
             measurements_enabled=self._measurements_enabled,
         )
