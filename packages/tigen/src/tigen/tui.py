@@ -30,9 +30,10 @@ from __future__ import annotations
 import contextlib
 import curses
 import time
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, Any
+from enum import Enum
+from typing import TYPE_CHECKING, Any, TypeAlias
 
 from tigen.ecs.system import System
 
@@ -95,6 +96,36 @@ class Table:
     fn: Callable[[dict[str, Any]], list[list[str]]]
 
 
+class TextColor(str, Enum):
+    """Semantic colors supported by TextBlock spans."""
+
+    GREEN = "green"
+    RED = "red"
+    YELLOW = "yellow"
+    CYAN = "cyan"
+    MAGENTA = "magenta"
+
+
+@dataclass(frozen=True)
+class TextStyle:
+    """Style applied to a TextBlock span."""
+
+    color: TextColor | None = None
+    bold: bool = False
+    dim: bool = False
+
+
+@dataclass(frozen=True)
+class TextSpan:
+    """A styled run of text inside a TextBlock line."""
+
+    text: str
+    style: TextStyle = field(default_factory=TextStyle)
+
+
+TextLine: TypeAlias = str | list[TextSpan]
+
+
 @dataclass
 class TextBlock:
     """Custom text widget. fn returns pre-rendered lines for the available width.
@@ -103,7 +134,7 @@ class TextBlock:
     without exposing curses to user code.
     """
 
-    fn: Callable[[dict[str, Any], int], list[str]]
+    fn: Callable[[dict[str, Any], int], Sequence[TextLine]]
 
 
 # Widget union type
@@ -414,7 +445,7 @@ class _DashboardRenderer:
         for line in lines:
             if row >= max_y - 1:
                 break
-            self._safe_addstr(row, col + 2, line, 0, max_col)
+            self._safe_add_line(row, col + 2, line, max_col)
             row += 1
 
         return row
@@ -581,3 +612,36 @@ class _DashboardRenderer:
             return
         with contextlib.suppress(curses.error):
             self.stdscr.addstr(row, col, text[:avail], attr)
+
+    def _safe_add_line(self, row: int, col: int, line: TextLine, max_col: int = 0) -> None:
+        if isinstance(line, str):
+            self._safe_addstr(row, col, line, 0, max_col)
+            return
+
+        cursor = col
+        for span in line:
+            if max_col > 0 and cursor >= max_col:
+                return
+            text = span.text
+            if max_col > 0:
+                text = text[: max_col - cursor]
+            self._safe_addstr(row, cursor, text, self._text_style_attr(span.style), max_col)
+            cursor += len(text)
+
+    def _text_style_attr(self, style: TextStyle) -> int:
+        attr = 0
+        if style.bold:
+            attr |= curses.A_BOLD
+        if style.dim:
+            attr |= curses.A_DIM
+
+        color_pairs = {
+            TextColor.GREEN: 1,
+            TextColor.RED: 2,
+            TextColor.YELLOW: 3,
+            TextColor.CYAN: 4,
+            TextColor.MAGENTA: 5,
+        }
+        if style.color is not None and curses.has_colors():
+            attr |= curses.color_pair(color_pairs[style.color])
+        return attr

@@ -309,7 +309,7 @@ wheels = [
 
 [[package]]
 name = "tigen"
-version = "0.5.1"
+version = "0.5.2"
 source = { editable = "packages/tigen" }
 dependencies = [
     { name = "numpy" },
