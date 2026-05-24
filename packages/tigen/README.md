@@ -1,5 +1,9 @@
 # tigen — Tiny Game Engine
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/danield137/projectzero/main/packages/tigen/assets/tigen-logo.png" alt="tigen logo" width="360">
+</p>
+
 A lightweight ECS (Entity Component System) based simulation engine.
 
 ## Features
