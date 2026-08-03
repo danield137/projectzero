@@ -22,11 +22,28 @@ def test_clamp():
     # Test above maximum
     assert clamp(15, 0, 10) == 10
 
-    # Test with float input
-    assert clamp(5.5, 0, 10) == 5
-
     # Test with equal min and max
     assert clamp(7, 5, 5) == 5
+
+
+def test_clamp_preserves_value_type():
+    """Clamping keeps the type of the value, not of the bounds."""
+    # An int in range stays an int
+    assert isinstance(clamp(5, 0, 10), int)
+
+    # A float in range keeps its fractional part
+    assert clamp(5.5, 0, 10) == 5.5
+    assert clamp(0.75, 0, 1) == 0.75
+    assert isinstance(clamp(0.75, 0, 1), float)
+
+    # A float pinned to a bound comes back as a float
+    assert clamp(1.4, 0, 1) == 1.0
+    assert isinstance(clamp(1.4, 0, 1), float)
+    assert clamp(-0.3, 0, 1) == 0.0
+    assert isinstance(clamp(-0.3, 0, 1), float)
+
+    # An int pinned to a float bound stays an int
+    assert isinstance(clamp(15, 0, 10.5), int)
 
 
 def test_random_values_w_normal_distribution():

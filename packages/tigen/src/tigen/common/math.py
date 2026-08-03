@@ -5,11 +5,15 @@ from typing import Protocol, TypeVar
 import numpy as np
 
 T = TypeVar("T")
+Number = TypeVar("Number", int, float)
 
 
-def clamp(value: int | float, min_value: int, max_value: int) -> int:
+def clamp(value: Number, min_value: float, max_value: float) -> Number:
     """
     Clamp a value to be within the specified range [min_value, max_value].
+
+    The result keeps the type of `value`, so clamping a float returns a float
+    and clamping an int returns an int, whatever the bounds are given as.
 
     Examples:
         >>> clamp(5, 0, 10)
@@ -18,12 +22,16 @@ def clamp(value: int | float, min_value: int, max_value: int) -> int:
         0
         >>> clamp(15, 0, 10)
         10
+        >>> clamp(0.75, 0, 1)
+        0.75
+        >>> clamp(1.4, 0, 1)
+        1.0
     """
     if value < min_value:
-        return int(min_value)
+        return type(value)(min_value)
     if value > max_value:
-        return int(max_value)
-    return int(value)
+        return type(value)(max_value)
+    return value
 
 
 def random_values_w_normal_distribution(
